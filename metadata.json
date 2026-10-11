@@ -1,0 +1,6 @@
+{
+  "name": "Afrotopia Café",
+  "description": "Afrotopia Café: fire-grilled meats, traditional Zimbabwean plates, sadza and Kariba bream, specialty coffee, craft cocktails, live music and sport.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
