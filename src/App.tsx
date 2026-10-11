@@ -39,10 +39,14 @@ function resolveInitialRoute(): PageRoute {
   if (VALID_ROUTES.includes(hash as PageRoute)) {
     return hash as PageRoute;
   }
-  const path = window.location.pathname
-    .replace(/^\/+/, '')
+  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+  let path = window.location.pathname
+    .replace(/^\/+|\/+$/g, '')
     .replace(/\.html$/i, '')
     .toLowerCase();
+  if (baseUrl && path.startsWith(baseUrl)) {
+    path = path.slice(baseUrl.length).replace(/^\/+/, '');
+  }
   if (path === 'index' || path === '') return 'home';
   if (VALID_ROUTES.includes(path as PageRoute)) {
     return path as PageRoute;
