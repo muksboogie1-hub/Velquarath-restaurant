@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/Velquarath-restaurant/',
+    base: process.env.GITHUB_ACTIONS ? '/Velquarath-restaurant/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
