@@ -10,23 +10,23 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
-          main: path.resolve(__dirname, 'index.html'),
-          menu: path.resolve(__dirname, 'menu.html'),
-          story: path.resolve(__dirname, 'story.html'),
-          gallery: path.resolve(__dirname, 'gallery.html'),
-          reservations: path.resolve(__dirname, 'reservations.html'),
-          contact: path.resolve(__dirname, 'contact.html'),
-          privacy: path.resolve(__dirname, 'privacy.html'),
-          cookies: path.resolve(__dirname, 'cookies.html'),
-          refunds: path.resolve(__dirname, 'refunds.html'),
-          terms: path.resolve(__dirname, 'terms.html'),
-          accessibility: path.resolve(__dirname, 'accessibility.html'),
+          main: path.resolve(import.meta.dirname, 'index.html'),
+          menu: path.resolve(import.meta.dirname, 'menu.html'),
+          story: path.resolve(import.meta.dirname, 'story.html'),
+          gallery: path.resolve(import.meta.dirname, 'gallery.html'),
+          reservations: path.resolve(import.meta.dirname, 'reservations.html'),
+          contact: path.resolve(import.meta.dirname, 'contact.html'),
+          privacy: path.resolve(import.meta.dirname, 'privacy.html'),
+          cookies: path.resolve(import.meta.dirname, 'cookies.html'),
+          refunds: path.resolve(import.meta.dirname, 'refunds.html'),
+          terms: path.resolve(import.meta.dirname, 'terms.html'),
+          accessibility: path.resolve(import.meta.dirname, 'accessibility.html'),
         },
       },
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {

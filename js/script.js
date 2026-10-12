@@ -19,11 +19,11 @@
   };
 
   var IMAGES = {
-    heroFeast: 'assets/images/hero_feast.jpg',
-    oxtailSadza: 'assets/images/dish_oxtail_sadza.jpg',
-    stickyRibsGrill: 'assets/images/dish_sticky_ribs.jpg',
-    bigDadBurger: 'assets/images/dish_big_dad_burger.jpg',
-    interiorPatio: 'assets/images/interior_patio.jpg'
+    heroFeast: new URL('../assets/images/hero_feast.jpg', import.meta.url).href,
+    oxtailSadza: new URL('../assets/images/dish_oxtail_sadza.jpg', import.meta.url).href,
+    stickyRibsGrill: new URL('../assets/images/dish_sticky_ribs.jpg', import.meta.url).href,
+    bigDadBurger: new URL('../assets/images/dish_big_dad_burger.jpg', import.meta.url).href,
+    interiorPatio: new URL('../assets/images/interior_patio.jpg', import.meta.url).href
   };
 
   // -------------------------------------------------------------------------
@@ -989,7 +989,7 @@
   // -------------------------------------------------------------------------
   // INITIALIZE ALL MODULES ON DOM READY
   // -------------------------------------------------------------------------
-  document.addEventListener('DOMContentLoaded', function () {
+  function bootstrapAll() {
     initMobileMenu();
     initEmberCanvas();
     initMenuPage();
@@ -997,5 +997,11 @@
     initReservationsForm();
     initContactForm();
     initCookieManager();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapAll);
+  } else {
+    bootstrapAll();
+  }
 })();
