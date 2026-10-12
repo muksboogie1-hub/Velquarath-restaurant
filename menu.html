@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Menu | Velquarath Cafe — Grill, Traditional Mains, Sadza, Brunch &amp; Cocktails</title>
+    <meta name="description" content="Explore the full Velquarath Cafe menu: Sticky Ribs, XL Ribs, Oxtail & Beans, Road Runner, Kariba Bream, White & Brown Sadza, Breakfast, Big Dad Burger, and Signature Cocktails." />
+    <meta property="og:title" content="Menu | Velquarath Cafe — Grill, Traditional Mains, Sadza, Brunch &amp; Cocktails" />
+    <meta property="og:description" content="Complete Velquarath Cafe menu across our grill, traditional Zimbabwean kitchen, breakfast, brunch, and cocktail bar." />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand-wordmark">Velquarath Cafe</a>
+
+        <nav aria-label="Primary navigation" class="desktop-nav">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="menu.html" aria-current="page" class="nav-link active">Menu</a>
+          <a href="story.html" class="nav-link">Our Story</a>
+          <a href="gallery.html" class="nav-link">Gallery</a>
+          <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+
+        <div class="header-actions">
+          <a href="reservations.html" class="btn-primary">Book a Table</a>
+          <button
+            type="button"
+            id="mobile-menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-navigation-drawer"
+            aria-label="Open navigation menu"
+            class="mobile-menu-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 12h16M4 6h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="mobile-menu-backdrop" class="mobile-backdrop" aria-hidden="true"></div>
+      <nav id="mobile-navigation-drawer" aria-label="Mobile navigation" class="mobile-drawer">
+        <ul class="mobile-nav-list">
+          <li><a href="index.html" class="mobile-nav-link">Home</a></li>
+          <li><a href="menu.html" aria-current="page" class="mobile-nav-link active">Menu</a></li>
+          <li><a href="story.html" class="mobile-nav-link">Our Story</a></li>
+          <li><a href="gallery.html" class="mobile-nav-link">Gallery</a></li>
+          <li><a href="contact.html" class="mobile-nav-link">Contact</a></li>
+          <li style="padding-top:0.5rem;">
+            <a href="reservations.html" class="btn-primary" style="width:100%;">Book a Table</a>
+          </li>
+        </ul>
+        <div class="mobile-policy-section">
+          <p class="mobile-policy-title">Policies &amp; Information</p>
+          <div class="mobile-policy-grid">
+            <a href="privacy.html" class="mobile-policy-link">Privacy Policy</a>
+            <a href="cookies.html" class="mobile-policy-link">Cookie Policy</a>
+            <a href="refunds.html" class="mobile-policy-link">Refunds &amp; Cancellations</a>
+            <a href="terms.html" class="mobile-policy-link">Terms &amp; Conditions</a>
+            <a href="accessibility.html" class="mobile-policy-link">Accessibility</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content" class="section" style="border-bottom:none;">
+      <div class="container">
+        <div style="max-width:48rem;margin-bottom:2.5rem;">
+          <p class="kicker">Velquarath Cafe · Complete Culinary &amp; Bar Menu</p>
+          <h1 class="page-title">The Menu</h1>
+          <p class="page-lead">
+            From our signature BBQ-glazed sticky ribs and flame-grilled meats to traditional Zimbabwean oxtail, free-range road runner, Kariba bream, steaming sadza, hearty breakfasts, stacked burgers, and house cocktails.
+          </p>
+        </div>
+
+        <!-- Sticky Search & Category Filter Toolbar -->
+        <div class="menu-toolbar">
+          <div class="toolbar-top">
+            <div id="menu-search-wrap" class="search-wrap">
+              <form id="menu-search-form" role="search">
+                <label for="menu-search-input" class="skip-link">Search dishes or drinks</label>
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input
+                  id="menu-search-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Search ribs, oxtail, sadza, bream, burger, cocktail..."
+                  class="search-input"
+                />
+                <div class="search-actions">
+                  <button type="button" id="menu-search-clear" class="search-clear-btn" aria-label="Clear search query" style="display:none;">✕</button>
+                  <button type="submit" class="search-submit-btn">Search</button>
+                </div>
+              </form>
+
+              <!-- Live Search Recommendations & Autocomplete Popover -->
+              <div id="menu-search-dropdown" role="listbox" aria-label="Menu search recommendations" class="search-dropdown">
+                <div class="dropdown-popular">
+                  <div class="dropdown-header">
+                    <span>Popular Searches</span>
+                    <button type="button" id="menu-dropdown-close" style="color:var(--ink-muted);">Close</button>
+                  </div>
+                  <div class="popular-tags">
+                    <button type="button" data-popular-term="Sticky Ribs" class="popular-tag-btn">Sticky Ribs</button>
+                    <button type="button" data-popular-term="Oxtail" class="popular-tag-btn">Oxtail</button>
+                    <button type="button" data-popular-term="Sadza" class="popular-tag-btn">Sadza</button>
+                    <button type="button" data-popular-term="Kariba Bream" class="popular-tag-btn">Kariba Bream</button>
+                    <button type="button" data-popular-term="Big Dad Burger" class="popular-tag-btn">Big Dad Burger</button>
+                    <button type="button" data-popular-term="Road Runner" class="popular-tag-btn">Road Runner</button>
+                    <button type="button" data-popular-term="Cocktail" class="popular-tag-btn">Cocktail</button>
+                    <button type="button" data-popular-term="Coffee" class="popular-tag-btn">Coffee</button>
+                  </div>
+                </div>
+                <div class="dropdown-results">
+                  <p id="menu-dropdown-title" style="padding:0.35rem 0.6rem;font-size:0.7rem;font-weight:600;color:var(--accent-gold);">Chef &amp; Bar Recommendations</p>
+                  <div id="menu-dropdown-results"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;color:var(--ink-muted);" class="font-mono-num">
+              <span id="menu-count-label">Showing 45 of 45 items</span>
+              <button type="button" id="menu-reset-btn" style="display:none;color:var(--accent-gold);font-weight:600;text-decoration:underline;">Reset</button>
+            </div>
+          </div>
+
+          <div id="menu-category-tabs" role="tablist" aria-label="Menu category filter" class="filter-tabs"></div>
+        </div>
+
+        <!-- Active Search Banner -->
+        <div id="menu-active-search-banner" class="callout-box" style="display:none;margin-bottom:2rem;border-color:rgba(201,162,75,0.4);"></div>
+
+        <!-- Dynamic Menu Sections Container (Populated by js/script.js) -->
+        <div id="menu-sections-container"></div>
+
+        <!-- Pricing & Allergen Note -->
+        <div class="callout-box" style="margin-top:4rem;padding:1.75rem;">
+          <div style="max-width:44rem;">
+            <h2 class="font-display" style="font-size:1.1rem;font-weight:700;margin-bottom:0.35rem;">Menu Pricing, Allergens &amp; Group Catering</h2>
+            <p style="font-size:0.85rem;color:var(--ink-muted);">
+              Off-the-grill prices are listed in USD. For traditional mains, daily market fish (Kariba bream), game curries, and bar specials, please check our in-house chalkboards or ask your server. High chairs and a kids’ menu are available for families.
+            </p>
+          </div>
+          <a href="reservations.html" class="btn-primary">Reserve Your Table</a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Cookie Consent Banner & Modal -->
+    <aside id="cookie-consent-banner" aria-label="Cookie consent notice" class="cookie-banner">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;">
+        <h2 class="font-display" style="font-size:1rem;font-weight:600;">Privacy &amp; Cookie Preferences</h2>
+        <button type="button" id="cookie-banner-dismiss" aria-label="Dismiss cookie notice" style="color:var(--ink-muted);font-size:1rem;">✕</button>
+      </div>
+      <p style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:1rem;">
+        We use strictly necessary local storage to remember your privacy choices. We do not load Google Analytics, advertising pixels, or third-party tracking cookies.
+        <a href="cookies.html" style="color:var(--accent-gold);text-decoration:underline;">Read Cookie Policy</a>
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <button type="button" data-cookie-accept-all class="btn-primary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Accept All</button>
+        <button type="button" data-cookie-reject class="btn-secondary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Reject Non-Essential</button>
+        <button type="button" data-open-cookie-modal class="btn-secondary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Customise</button>
+      </div>
+    </aside>
+
+    <div id="cookie-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="cookie-modal-title" class="cookie-modal">
+      <div class="cookie-modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;border-bottom:1px solid var(--border-hairline);">
+          <h2 id="cookie-modal-title" class="font-display" style="font-size:1.25rem;font-weight:700;">Customise Cookie Preferences</h2>
+          <button type="button" data-close-cookie-modal aria-label="Close cookie preferences modal" style="color:var(--ink-muted);font-size:1.1rem;">✕</button>
+        </div>
+        <form id="cookie-custom-form" style="margin-top:1rem;">
+          <p style="font-size:0.85rem;color:var(--ink-muted);margin-bottom:1rem;">
+            Control how Velquarath Cafe uses browser storage and cookies. Zero third-party advertising pixels or analytics trackers are loaded.
+          </p>
+          <div style="padding:0.85rem;border-radius:0.5rem;background-color:var(--bg-canvas);border:1px solid var(--border-hairline);margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;">
+              <span>1. Strictly Necessary Storage</span>
+              <span style="color:var(--accent-gold);font-size:0.75rem;">Always Active</span>
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink-muted);">Stores your cookie consent choice in local storage so we do not repeatedly prompt you.</p>
+          </div>
+          <div style="padding:0.85rem;border-radius:0.5rem;background-color:var(--bg-canvas);border:1px solid var(--border-hairline);margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;">
+              <label for="toggle-functional">2. Functional &amp; Filter Preferences</label>
+              <input id="toggle-functional" type="checkbox" style="width:1rem;height:1rem;accent-color:var(--accent-gold);" />
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink-muted);">Allows the browser to remember your preferred menu filter and session settings.</p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.5rem;padding-top:1rem;border-top:1px solid var(--border-hairline);">
+            <div style="display:flex;gap:0.5rem;">
+              <button type="button" data-cookie-accept-all class="btn-primary" style="padding:0.5rem 0.9rem;font-size:0.75rem;">Accept All</button>
+              <button type="button" data-cookie-reject class="btn-secondary" style="padding:0.5rem 0.9rem;font-size:0.75rem;">Reject Non-Essential</button>
+            </div>
+            <button type="submit" class="btn-secondary" style="padding:0.5rem 0.9rem;font-size:0.75rem;border-color:var(--accent-gold);color:var(--accent-gold);">Save Preferences</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <a href="index.html" class="brand-wordmark" style="display:inline-block;margin-bottom:0.75rem;">Velquarath Cafe</a>
+            <p style="font-size:0.875rem;margin-bottom:1rem;">
+              Sticky ribs, sadza and bream, strong coffee and cold cocktails. Eat on the patio, watch the game, stay for the music.
+            </p>
+            <p style="font-size:0.75rem;opacity:0.8;">
+              Dine-in · Takeaway · Delivery · Private Dining · Outdoor Patio · Wheelchair Accessible
+            </p>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Explore Velquarath</h2>
+            <ul class="footer-links">
+              <li><a href="index.html">Home</a></li>
+              <li><a href="menu.html">Menu</a></li>
+              <li><a href="story.html">Our Story</a></li>
+              <li><a href="gallery.html">Gallery</a></li>
+              <li><a href="contact.html">Contact</a></li>
+              <li><a href="reservations.html">Reservations</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Policies &amp; Compliance</h2>
+            <ul class="footer-links">
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="cookies.html">Cookie Policy</a></li>
+              <li><a href="refunds.html">Refunds &amp; Cancellations</a></li>
+              <li><a href="terms.html">Terms &amp; Conditions</a></li>
+              <li><a href="accessibility.html">Accessibility</a></li>
+              <li><button type="button" data-open-cookie-modal style="text-decoration:underline;text-align:left;">Manage Cookie Preferences</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Visit &amp; Opening Hours</h2>
+            <div style="font-size:0.78rem;display:flex;flex-direction:column;gap:0.5rem;">
+              <p style="color:var(--ink-primary);font-weight:500;">Harare, Zimbabwe (Exact street address to be confirmed by owner)</p>
+              <p>Phone / WhatsApp: <em>Phone number to be confirmed by owner</em></p>
+              <div style="padding-top:0.5rem;border-top:1px solid rgba(51,46,38,0.6);display:flex;flex-direction:column;gap:0.35rem;">
+                <div><strong style="color:var(--ink-primary);">Monday – Thursday:</strong> 08:00 – 22:00</div>
+                <div><strong style="color:var(--ink-primary);">Friday – Saturday:</strong> 08:00 – Late</div>
+                <div><strong style="color:var(--ink-primary);">Sunday:</strong> 08:30 – 21:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Velquarath Cafe. All rights reserved.</p>
+          <p>Credit, Debit &amp; NFC Mobile Payments Accepted · Free Wheelchair-Accessible Parking</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>

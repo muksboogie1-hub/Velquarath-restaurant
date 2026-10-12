@@ -5,8 +5,25 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/Velquarath-restaurant/',
+    base: './',
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          menu: path.resolve(__dirname, 'menu.html'),
+          story: path.resolve(__dirname, 'story.html'),
+          gallery: path.resolve(__dirname, 'gallery.html'),
+          reservations: path.resolve(__dirname, 'reservations.html'),
+          contact: path.resolve(__dirname, 'contact.html'),
+          privacy: path.resolve(__dirname, 'privacy.html'),
+          cookies: path.resolve(__dirname, 'cookies.html'),
+          refunds: path.resolve(__dirname, 'refunds.html'),
+          terms: path.resolve(__dirname, 'terms.html'),
+          accessibility: path.resolve(__dirname, 'accessibility.html'),
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

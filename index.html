@@ -1,21 +1,519 @@
 <!doctype html>
-<html lang="en" class="dark scroll-smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Velquarath Cafe | Fire-Grilled Meats, Traditional Zimbabwean Cuisine & Craft Cocktails</title>
+    <title>Velquarath Cafe | Fire-Grilled Meats, Traditional Zimbabwean Cuisine &amp; Craft Cocktails</title>
     <meta name="description" content="Velquarath Cafe: sticky ribs, sadza and Kariba bream, traditional Zimbabwean dishes, strong coffee, cold craft cocktails, live music and sport on the patio." />
-    <meta property="og:title" content="Velquarath Cafe | Fire-Grilled Meats, Traditional Zimbabwean Cuisine & Craft Cocktails" />
+    <meta property="og:title" content="Velquarath Cafe | Fire-Grilled Meats, Traditional Zimbabwean Cuisine &amp; Craft Cocktails" />
     <meta property="og:description" content="Sticky ribs, sadza and bream, strong coffee and cold cocktails. Eat on the patio, watch the game, stay for the music." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body class="bg-[#141210] text-[#F4ECDA] antialiased selection:bg-[#C9A24B] selection:text-[#141210]">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- 3-Zone Top Bar Navigation -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand-wordmark">Velquarath Cafe</a>
+
+        <nav aria-label="Primary navigation" class="desktop-nav">
+          <a href="index.html" aria-current="page" class="nav-link active">Home</a>
+          <a href="menu.html" class="nav-link">Menu</a>
+          <a href="story.html" class="nav-link">Our Story</a>
+          <a href="gallery.html" class="nav-link">Gallery</a>
+          <a href="contact.html" class="nav-link">Contact</a>
+        </nav>
+
+        <div class="header-actions">
+          <a href="reservations.html" class="btn-primary">Book a Table</a>
+          <button
+            type="button"
+            id="mobile-menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-navigation-drawer"
+            aria-label="Open navigation menu"
+            class="mobile-menu-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 12h16M4 6h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="mobile-menu-backdrop" class="mobile-backdrop" aria-hidden="true"></div>
+      <nav id="mobile-navigation-drawer" aria-label="Mobile navigation" class="mobile-drawer">
+        <ul class="mobile-nav-list">
+          <li><a href="index.html" aria-current="page" class="mobile-nav-link active">Home</a></li>
+          <li><a href="menu.html" class="mobile-nav-link">Menu</a></li>
+          <li><a href="story.html" class="mobile-nav-link">Our Story</a></li>
+          <li><a href="gallery.html" class="mobile-nav-link">Gallery</a></li>
+          <li><a href="contact.html" class="mobile-nav-link">Contact</a></li>
+          <li style="padding-top:0.5rem;">
+            <a href="reservations.html" class="btn-primary" style="width:100%;">Book a Table</a>
+          </li>
+        </ul>
+        <div class="mobile-policy-section">
+          <p class="mobile-policy-title">Policies &amp; Information</p>
+          <div class="mobile-policy-grid">
+            <a href="privacy.html" class="mobile-policy-link">Privacy Policy</a>
+            <a href="cookies.html" class="mobile-policy-link">Cookie Policy</a>
+            <a href="refunds.html" class="mobile-policy-link">Refunds &amp; Cancellations</a>
+            <a href="terms.html" class="mobile-policy-link">Terms &amp; Conditions</a>
+            <a href="accessibility.html" class="mobile-policy-link">Accessibility</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <!-- 1. CINEMATIC HERO SECTION -->
+      <section class="hero-section">
+        <div class="hero-bg">
+          <img
+            src="assets/images/hero_feast.jpg"
+            alt="Velquarath Cafe candlelit feast with sticky BBQ pork ribs, traditional white sadza, slow-braised oxtail in a clay pot, and whole grilled Kariba bream"
+          />
+          <div class="hero-scrim" aria-hidden="true"></div>
+        </div>
+
+        <canvas id="ember-canvas" class="ember-canvas" aria-hidden="true"></canvas>
+
+        <div class="container hero-content">
+          <div style="max-width:48rem;">
+            <p class="kicker">Off-the-Grill Meats · Traditional Zimbabwean Plates · Craft Cocktails · Live Music</p>
+            <h1 class="hero-title">Velquarath Cafe</h1>
+            <p class="hero-lead">
+              Sticky ribs, sadza and bream, strong coffee and cold cocktails. Eat on the patio, watch the game, stay for the music.
+            </p>
+            <div class="hero-cta-row">
+              <a href="reservations.html" class="btn-primary btn-lg">Book a Table</a>
+              <a href="menu.html" class="btn-secondary btn-lg">Explore Full Menu</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. OFF THE GRILL & TRADITIONAL SHOWCASE -->
+      <section class="section">
+        <div class="container">
+          <div class="section-header-row">
+            <div>
+              <p class="kicker">01. Signature Flame-Grilled Favorites</p>
+              <h2 class="section-title">Off the Grill</h2>
+              <p class="section-subtitle">
+                Fire-grilled meat, glazed in our signature BBQ sauce and served with fries.
+              </p>
+            </div>
+            <a href="menu.html?category=grill" class="link-gold">See All 45+ Menu Items →</a>
+          </div>
+
+          <div class="grid-cards">
+            <!-- Sticky Ribs -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/dish_sticky_ribs.jpg" alt="Flame-grilled sticky pork ribs glazed in dark BBQ sauce served with crispy golden fries" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">Sticky Ribs</h3>
+                    <span class="card-price">$11</span>
+                  </div>
+                  <p class="card-desc">Fall-off-the-bone pork ribs glazed in signature BBQ sauce, served with fries.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">Signature Grill · Served with fries</span>
+              </div>
+            </article>
+
+            <!-- XL Ribs -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/dish_sticky_ribs.jpg" alt="Double rack of flame-grilled XL pork ribs with smoky barbecue glaze and fries" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">XL Ribs</h3>
+                    <span class="card-price">$15</span>
+                  </div>
+                  <p class="card-desc">A double portion of our ribs, for double the deliciousness.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">Double Portion · Served with fries</span>
+              </div>
+            </article>
+
+            <!-- The Bro Meal -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/hero_feast.jpg" alt="Char-grilled steak topped with two fried eggs and served with golden fries" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">The Bro Meal</h3>
+                    <span class="card-price">$8</span>
+                  </div>
+                  <p class="card-desc">Steak and two fried eggs, served with fries.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">Steak &amp; Eggs · Served with fries</span>
+              </div>
+            </article>
+
+            <!-- The Bambazonke -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/dish_sticky_ribs.jpg" alt="Two grilled skewers of sausage, chicken tenders, peppers and cherry tomatoes with wings and fries" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">The Bambazonke</h3>
+                    <span class="card-price">$7</span>
+                  </div>
+                  <p class="card-desc">Two kebabs of sausage, chicken tenders, grilled peppers and cherry tomatoes, with two wings and fries.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">2 Kebabs + 2 Wings · Served with fries</span>
+              </div>
+            </article>
+
+            <!-- BBQ Chicken -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/dish_sticky_ribs.jpg" alt="Fire-grilled chicken glazed in rich smoky BBQ sauce" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">BBQ Chicken</h3>
+                    <span class="card-price">$6</span>
+                  </div>
+                  <p class="card-desc">Quarter or half chicken, grilled and glazed in BBQ sauce.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">Quarter or Half Chicken</span>
+              </div>
+            </article>
+
+            <!-- Issa Wrap Remix -->
+            <article class="menu-card">
+              <div>
+                <div class="card-img-wrap">
+                  <img src="assets/images/dish_big_dad_burger.jpg" alt="Toasted gourmet wrap filled with grilled chicken or roasted vegetables" loading="lazy" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title-row">
+                    <h3 class="card-title">Issa Wrap Remix</h3>
+                    <span class="card-price">$6</span>
+                  </div>
+                  <p class="card-desc">Your favourite wrap, bigger and better. Choose chicken or veggie explosion.</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>Off the Grill</span>
+                <span class="card-note-gold">Chicken or Veggie Explosion</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="callout-box" style="margin-top:2rem;">
+            <p style="font-size:0.9rem;font-weight:500;">
+              <strong style="color:var(--accent-gold);">Coming soon:</strong> Sweet Pork &amp; Frites — sticky pork belly served with fries.
+            </p>
+            <a href="menu.html" class="link-gold" style="font-size:0.8rem;">View Full Menu &amp; Drinks →</a>
+          </div>
+
+          <!-- Traditional Zimbabwean Kitchen Preview -->
+          <div class="grid-2col" style="margin-top:5rem;padding-top:4rem;border-top:1px solid var(--border-hairline);">
+            <div class="col-5" style="display:flex;flex-direction:column;justify-content:space-between;">
+              <div>
+                <p class="kicker">02. Heritage &amp; Heart</p>
+                <h2 class="section-title">Traditional Zimbabwean Mains, Sadza &amp; Starters</h2>
+                <p style="margin-top:1rem;font-size:0.95rem;color:var(--ink-muted);">
+                  From slow-braised Oxtail &amp; Beans, free-range Road Runner, and whole Kariba Bream with Soup to Impala Curry, Rabbit (Tsuro), Madora, and Derere Rine Matemba — served with steaming White or Brown Sadza or Rice, Beans &amp; Nuts.
+                </p>
+
+                <ul style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.85rem;">
+                  <li style="padding-bottom:0.85rem;border-bottom:1px solid var(--border-hairline);">
+                    <h3 style="font-size:1rem;font-weight:600;color:var(--ink-primary);">Oxtail &amp; Beans</h3>
+                    <p style="font-size:0.8rem;color:var(--ink-muted);margin-top:0.2rem;">Slow-braised tender oxtail simmered with sugar beans in a rich, savory gravy.</p>
+                  </li>
+                  <li style="padding-bottom:0.85rem;border-bottom:1px solid var(--border-hairline);">
+                    <h3 style="font-size:1rem;font-weight:600;color:var(--ink-primary);">Road Runner</h3>
+                    <p style="font-size:0.8rem;color:var(--ink-muted);margin-top:0.2rem;">Authentic free-range country chicken slow-simmered in a traditional tomato and onion broth.</p>
+                  </li>
+                  <li style="padding-bottom:0.85rem;border-bottom:1px solid var(--border-hairline);">
+                    <h3 style="font-size:1rem;font-weight:600;color:var(--ink-primary);">Kariba Bream with Soup</h3>
+                    <p style="font-size:0.8rem;color:var(--ink-muted);margin-top:0.2rem;">Whole fresh Kariba bream, flame-grilled or pan-crisped, served with aromatic soup.</p>
+                  </li>
+                  <li style="padding-bottom:0.85rem;border-bottom:1px solid var(--border-hairline);">
+                    <h3 style="font-size:1rem;font-weight:600;color:var(--ink-primary);">Smoked Pork Bones &amp; Impala Curry</h3>
+                    <p style="font-size:0.8rem;color:var(--ink-muted);margin-top:0.2rem;">Meaty smoked pork bones, beef bones &amp; chicken livers, rabbit masala, and grilled guinea fowl.</p>
+                  </li>
+                </ul>
+              </div>
+
+              <div style="margin-top:2rem;display:flex;flex-wrap:wrap;gap:0.75rem;">
+                <a href="menu.html?category=traditional" class="btn-primary">Explore Traditional Dishes</a>
+                <a href="story.html" class="btn-secondary">Read Our Story</a>
+              </div>
+            </div>
+
+            <div class="col-7 form-grid-2">
+              <div class="menu-card">
+                <div style="height:17rem;overflow:hidden;">
+                  <img src="assets/images/dish_oxtail_sadza.jpg" alt="Traditional Zimbabwean Oxtail and Beans stew with steaming white sadza and greens" loading="lazy" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div style="padding:1.1rem;border-top:1px solid var(--border-hairline);">
+                  <p class="font-display" style="font-size:0.95rem;font-weight:600;">Oxtail &amp; Beans with White Sadza</p>
+                  <p style="font-size:0.75rem;color:var(--ink-muted);margin-top:0.2rem;">Slow-braised oxtail, sugar beans, steaming white sadza &amp; greens</p>
+                </div>
+              </div>
+
+              <div class="menu-card">
+                <div style="height:17rem;overflow:hidden;">
+                  <img src="assets/images/dish_big_dad_burger.jpg" alt="The Big Dad Burger with beef patty, fried egg, bacon, melted cheese and fries" loading="lazy" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div style="padding:1.1rem;border-top:1px solid var(--border-hairline);">
+                  <p class="font-display" style="font-size:0.95rem;font-weight:600;">Brunch, Burgers &amp; Afro Platter</p>
+                  <p style="font-size:0.75rem;color:var(--ink-muted);margin-top:0.2rem;">Big Dad Burger, Afropolitan Breakfast &amp; sharing platters</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. THE VIBE SECTION -->
+      <section class="section section-forest">
+        <div class="container">
+          <div class="grid-2col" style="align-items:center;">
+            <div class="col-7">
+              <p class="kicker">03. The Velquarath Atmosphere</p>
+              <h2 class="section-title" style="font-size:clamp(2rem,4vw,3rem);">Come for the food, stay for the night</h2>
+              <p style="margin-top:1rem;font-size:1.05rem;color:var(--ink-secondary);max-width:40rem;">
+                Casual, cosy and a little trendy. A good spot for groups, tourists and a quiet meal on your own.
+              </p>
+
+              <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(201,162,75,0.3);">
+                <p style="font-size:0.75rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.5rem;">
+                  What Awaits You at Velquarath Cafe
+                </p>
+                <p style="font-size:0.95rem;line-height:2;color:var(--ink-primary);">
+                  Live music <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Sport on screen <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Fireplace <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Great cocktails <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Great beer selection <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Great wine list <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Great coffee <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Happy-hour drinks <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Late-night food <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Private dining room <span style="color:var(--accent-gold);margin:0 0.4rem;">·</span>
+                  Outdoor seating
+                </p>
+              </div>
+
+              <div class="form-grid-2" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(201,162,75,0.3);">
+                <div>
+                  <h3 class="font-display" style="font-size:1.1rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.25rem;">How to enjoy us</h3>
+                  <p style="font-size:0.875rem;color:var(--ink-secondary);">Dine-in, takeaway or delivery. Table service, catering and reservations accepted. Brunch and lunch reservations are recommended.</p>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.1rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.25rem;">When to come</h3>
+                  <p style="font-size:0.875rem;color:var(--ink-secondary);">Breakfast, brunch, lunch and dinner, plus desserts and small plates.</p>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.1rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.25rem;">Families</h3>
+                  <p style="font-size:0.875rem;color:var(--ink-secondary);">High chairs and a kids' menu.</p>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.1rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.25rem;">Access &amp; parking</h3>
+                  <p style="font-size:0.875rem;color:var(--ink-secondary);">Wheelchair-accessible entrance, seating, toilet and car park. Free parking lot and street parking.</p>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.1rem;font-weight:600;color:var(--accent-gold);margin-bottom:0.25rem;">Paying</h3>
+                  <p style="font-size:0.875rem;color:var(--ink-secondary);">Credit cards, debit cards and NFC mobile payments.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-5">
+              <div style="border-radius:1rem;overflow:hidden;border:1px solid rgba(201,162,75,0.4);background-color:var(--bg-canvas);box-shadow:0 25px 50px -12px rgba(0,0,0,0.6);">
+                <div style="height:22rem;">
+                  <img src="assets/images/interior_patio.jpg" alt="Velquarath Cafe outdoor patio, indoor fireplace, and emerald-lit cocktail bar at night" loading="lazy" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div style="padding:1.5rem;border-top:1px solid var(--border-hairline);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <h3 class="font-display" style="font-size:1.1rem;font-weight:700;">Patio, Fireplace &amp; Cocktail Bar</h3>
+                    <p style="font-size:0.75rem;color:var(--ink-muted);margin-top:0.25rem;">Afrotopia Gnt · Njuzu Fever · The Somgaga · Summa Yo Muthi · The Pungwe · Chi Slender</p>
+                  </div>
+                  <a href="gallery.html" class="btn-secondary" style="font-size:0.75rem;padding:0.5rem 0.9rem;">View Gallery</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. SAVE A TABLE CTA -->
+      <section class="section" style="border-bottom:none;">
+        <div class="container">
+          <div class="form-panel grid-2col" style="align-items:center;">
+            <div class="col-8">
+              <p class="kicker">04. Reservations &amp; Enquiries</p>
+              <h2 class="section-title">Save a table for brunch, lunch, or live music nights</h2>
+              <p style="margin-top:0.75rem;font-size:1rem;color:var(--ink-muted);max-width:42rem;">
+                Ask about happy-hour drinks, live music nights, private dining room bookings, and what’s showing on the big screen. Brunch and lunch reservations are recommended.
+              </p>
+            </div>
+            <div class="col-4" style="display:flex;flex-direction:column;gap:0.75rem;">
+              <a href="reservations.html" class="btn-primary btn-lg" style="width:100%;">Book a Table Online</a>
+              <a href="contact.html" class="btn-secondary btn-lg" style="width:100%;">Contact &amp; Directions</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Cookie Consent Banner & Modal -->
+    <aside id="cookie-consent-banner" aria-label="Cookie consent notice" class="cookie-banner">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;">
+        <h2 class="font-display" style="font-size:1rem;font-weight:600;">Privacy &amp; Cookie Preferences</h2>
+        <button type="button" id="cookie-banner-dismiss" aria-label="Dismiss cookie notice" style="color:var(--ink-muted);font-size:1rem;">✕</button>
+      </div>
+      <p style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:1rem;">
+        We use strictly necessary local storage to remember your privacy choices. We do not load Google Analytics, advertising pixels, or third-party tracking cookies.
+        <a href="cookies.html" style="color:var(--accent-gold);text-decoration:underline;">Read Cookie Policy</a>
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <button type="button" data-cookie-accept-all class="btn-primary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Accept All</button>
+        <button type="button" data-cookie-reject class="btn-secondary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Reject Non-Essential</button>
+        <button type="button" data-open-cookie-modal class="btn-secondary" style="padding:0.45rem 0.85rem;font-size:0.75rem;">Customise</button>
+      </div>
+    </aside>
+
+    <div id="cookie-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="cookie-modal-title" class="cookie-modal">
+      <div class="cookie-modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;border-bottom:1px solid var(--border-hairline);">
+          <h2 id="cookie-modal-title" class="font-display" style="font-size:1.25rem;font-weight:700;">Customise Cookie Preferences</h2>
+          <button type="button" data-close-cookie-modal aria-label="Close cookie preferences modal" style="color:var(--ink-muted);font-size:1.1rem;">✕</button>
+        </div>
+        <form id="cookie-custom-form" style="margin-top:1rem;">
+          <p style="font-size:0.85rem;color:var(--ink-muted);margin-bottom:1rem;">
+            Control how Velquarath Cafe uses browser storage and cookies. Zero third-party advertising pixels or analytics trackers are loaded.
+          </p>
+          <div style="padding:0.85rem;border-radius:0.5rem;background-color:var(--bg-canvas);border:1px solid var(--border-hairline);margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;">
+              <span>1. Strictly Necessary Storage</span>
+              <span style="color:var(--accent-gold);font-size:0.75rem;">Always Active</span>
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink-muted);">Stores your cookie consent choice in local storage so we do not repeatedly prompt you.</p>
+          </div>
+          <div style="padding:0.85rem;border-radius:0.5rem;background-color:var(--bg-canvas);border:1px solid var(--border-hairline);margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;">
+              <label for="toggle-functional">2. Functional &amp; Filter Preferences</label>
+              <input id="toggle-functional" type="checkbox" style="width:1rem;height:1rem;accent-color:var(--accent-gold);" />
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink-muted);">Allows the browser to remember your preferred menu filter and session settings.</p>
+          </div>
+          <div style="padding:0.85rem;border-radius:0.5rem;background-color:var(--bg-canvas);border:1px solid var(--border-hairline);margin-bottom:1.25rem;opacity:0.75;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;">
+              <span>3. Analytics &amp; Advertising Pixels</span>
+              <span style="color:var(--ink-muted);font-size:0.75rem;">Not Used (0 Scripts)</span>
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink-muted);">We do not load Google Analytics or third-party ad pixels.</p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.5rem;padding-top:1rem;border-top:1px solid var(--border-hairline);">
+            <div style="display:flex;gap:0.5rem;">
+              <button type="button" data-cookie-accept-all class="btn-primary" style="padding:0.5rem 0.9rem;font-size:0.75rem;">Accept All</button>
+              <button type="button" data-cookie-reject class="btn-secondary" style="padding:0.5rem 0.9rem;font-size:0.75rem;">Reject Non-Essential</button>
+            </div>
+            <button type="submit" class="btn-secondary" style="padding:0.5rem 0.9rem;font-size:0.75rem;border-color:var(--accent-gold);color:var(--accent-gold);">Save Preferences</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Connected Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <a href="index.html" class="brand-wordmark" style="display:inline-block;margin-bottom:0.75rem;">Velquarath Cafe</a>
+            <p style="font-size:0.875rem;margin-bottom:1rem;">
+              Sticky ribs, sadza and bream, strong coffee and cold cocktails. Eat on the patio, watch the game, stay for the music.
+            </p>
+            <p style="font-size:0.75rem;opacity:0.8;">
+              Dine-in · Takeaway · Delivery · Private Dining · Outdoor Patio · Wheelchair Accessible
+            </p>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Explore Velquarath</h2>
+            <ul class="footer-links">
+              <li><a href="index.html">Home</a></li>
+              <li><a href="menu.html">Menu</a></li>
+              <li><a href="story.html">Our Story</a></li>
+              <li><a href="gallery.html">Gallery</a></li>
+              <li><a href="contact.html">Contact</a></li>
+              <li><a href="reservations.html">Reservations</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Policies &amp; Compliance</h2>
+            <ul class="footer-links">
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="cookies.html">Cookie Policy</a></li>
+              <li><a href="refunds.html">Refunds &amp; Cancellations</a></li>
+              <li><a href="terms.html">Terms &amp; Conditions</a></li>
+              <li><a href="accessibility.html">Accessibility</a></li>
+              <li><button type="button" data-open-cookie-modal style="text-decoration:underline;text-align:left;">Manage Cookie Preferences</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer-heading">Visit &amp; Opening Hours</h2>
+            <div style="font-size:0.78rem;display:flex;flex-direction:column;gap:0.5rem;">
+              <p style="color:var(--ink-primary);font-weight:500;">Harare, Zimbabwe (Exact street address to be confirmed by owner)</p>
+              <p>Phone / WhatsApp: <em>Phone number to be confirmed by owner</em></p>
+              <div style="padding-top:0.5rem;border-top:1px solid rgba(51,46,38,0.6);display:flex;flex-direction:column;gap:0.35rem;">
+                <div><strong style="color:var(--ink-primary);">Monday – Thursday:</strong> 08:00 – 22:00</div>
+                <div><strong style="color:var(--ink-primary);">Friday – Saturday:</strong> 08:00 – Late</div>
+                <div><strong style="color:var(--ink-primary);">Sunday:</strong> 08:30 – 21:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Velquarath Cafe. All rights reserved.</p>
+          <p>Credit, Debit &amp; NFC Mobile Payments Accepted · Free Wheelchair-Accessible Parking</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/script.js"></script>
   </body>
 </html>
-
