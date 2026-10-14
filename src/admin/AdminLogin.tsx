@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Lock,
   Mail,
@@ -8,6 +8,10 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Database,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   adminSignIn,
@@ -15,6 +19,11 @@ import {
   isPreviewEnvironment,
 } from '../services/authService';
 import { useContent } from '../context/ContentContext';
+import {
+  getSupabaseConfigStatus,
+  saveSupabaseBrowserConfig,
+  validateSupabaseKey,
+} from '../services/supabase';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -22,14 +31,27 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackToSite }) => {
-  const { isSupabaseActive, setCurrentUser } = useContent();
+  const { isSupabaseActive, setCurrentUser, refreshAll } = useContent();
   const [email, setEmail] = useState('velquarath@gmail.com');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Connection config helper state
+  const [configStatus, setConfigStatus] = useState(getSupabaseConfigStatus());
+  const [showConfigDrawer, setShowConfigDrawer] = useState(!isSupabaseActive);
+  const [setupUrl, setSetupUrl] = useState(configStatus.url || '');
+  const [setupKey, setSetupKey] = useState('');
+  const [setupMsg, setSetupMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
+    null
+  );
+
   const isPreview = isPreviewEnvironment();
+
+  useEffect(() => {
+    setConfigStatus(getSupabaseConfigStatus());
+  }, [isSupabaseActive]);
 
   const handleSupabaseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +70,33 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackTo
       setError(err.message || 'An unexpected error occurred during login.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveBrowserConnection = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSetupMsg(null);
+
+    const keyCheck = validateSupabaseKey(setupKey);
+    if (!keyCheck.valid) {
+      setSetupMsg({ type: 'error', text: keyCheck.error || 'Invalid Supabase key' });
+      return;
+    }
+
+    const res = saveSupabaseBrowserConfig(setupUrl, setupKey);
+    if (res.success) {
+      setSetupMsg({
+        type: 'success',
+        text: 'Credentials saved! Connecting to Supabase...',
+      });
+      refreshAll();
+      setTimeout(() => {
+        setConfigStatus(getSupabaseConfigStatus());
+        setShowConfigDrawer(false);
+        setSetupMsg(null);
+      }, 900);
+    } else {
+      setSetupMsg({ type: 'error', text: res.error || 'Failed to save configuration' });
     }
   };
 
@@ -88,22 +137,104 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackTo
           </p>
         </div>
 
-        {/* Live Backend Connection Status */}
+        {/* Live Backend Connection Status Pill */}
         <div
-          className={`mb-6 p-3 rounded-xl text-xs flex items-start gap-2.5 ${
+          className={`mb-6 p-3 rounded-xl text-xs flex items-start justify-between gap-2.5 ${
             isSupabaseActive
               ? 'bg-emerald-950/40 border border-emerald-700/50 text-emerald-200'
               : 'bg-zinc-900 border border-zinc-700 text-zinc-300'
           }`}
         >
-          <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#C9A24B]" />
-          <div>
-            <strong>Access Protection:</strong>{' '}
-            {isSupabaseActive
-              ? 'Protected by Supabase Authentication & Row-Level Security whitelist.'
-              : 'Supabase credentials not configured in environment.'}
+          <div className="flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#C9A24B]" />
+            <div>
+              <strong>Access Protection:</strong>{' '}
+              {isSupabaseActive ? (
+                <>
+                  Connected to Supabase ({configStatus.source === 'build_time_env' ? 'Build Config' : 'Browser Config'}).
+                </>
+              ) : (
+                <>Supabase credentials not detected.</>
+              )}
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowConfigDrawer(!showConfigDrawer)}
+            className="text-[11px] text-[#C9A24B] hover:underline font-semibold shrink-0 cursor-pointer flex items-center gap-0.5"
+          >
+            <span>{showConfigDrawer ? 'Hide' : 'Setup'}</span>
+            {showConfigDrawer ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
         </div>
+
+        {/* BROWSER-LEVEL CONNECTION SETUP DRAWER */}
+        {showConfigDrawer && (
+          <div className="mb-6 p-4 rounded-xl bg-[#141210] border border-[#C9A24B]/40 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#F4ECDA]">
+              <Database className="w-4 h-4 text-[#C9A24B]" />
+              <span>Connect Supabase Database</span>
+            </div>
+            <p className="text-[11px] text-[#B8AD96] leading-relaxed">
+              If your Cloudflare Worker build variables were not saved, enter your public project URL and public publishable/anon key below to connect this browser directly:
+            </p>
+
+            {setupMsg && (
+              <div
+                className={`p-2.5 rounded-lg text-xs flex items-center gap-2 ${
+                  setupMsg.type === 'success'
+                    ? 'bg-emerald-950/70 border border-emerald-700 text-emerald-200'
+                    : 'bg-red-950/70 border border-red-700 text-red-200'
+                }`}
+              >
+                {setupMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                )}
+                <span>{setupMsg.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveBrowserConnection} className="space-y-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#B8AD96] mb-1">
+                  Project URL
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={setupUrl}
+                  onChange={(e) => setSetupUrl(e.target.value)}
+                  placeholder="https://xyz.supabase.co"
+                  className="w-full bg-[#1E1B17] border border-[#332E26] rounded px-3 py-1.5 text-xs text-[#F4ECDA] focus:border-[#C9A24B] focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#B8AD96] mb-1">
+                  Public Publishable / Anon Key (Never service-role)
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={setupKey}
+                  onChange={(e) => setSetupKey(e.target.value)}
+                  placeholder="sb_publishable_... or eyJhbGciOi..."
+                  className="w-full bg-[#1E1B17] border border-[#332E26] rounded px-3 py-1.5 text-xs text-[#F4ECDA] focus:border-[#C9A24B] focus:outline-none font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 rounded bg-[#C9A24B] hover:bg-[#DFB85E] text-[#141210] font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Save &amp; Connect to Supabase
+              </button>
+            </form>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-3.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-xs flex items-start gap-2.5">
