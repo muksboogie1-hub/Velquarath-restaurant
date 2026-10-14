@@ -62,6 +62,8 @@ export interface MenuItem {
   dietaryOrNote?: string;
   comingSoon?: boolean;
   featured?: boolean;
+  isAvailable?: boolean;
+  displayOrder?: number;
 }
 
 export const MENU_CATEGORIES: { id: MenuCategoryId; label: string; subtitle: string }[] = [

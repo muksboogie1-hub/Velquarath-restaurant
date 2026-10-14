@@ -8,6 +8,7 @@ import {
 } from '../data/galleryData';
 import { ResilientImage } from '../components/ResilientImage';
 import { PageRoute } from '../components/Layout';
+import { useContent } from '../context/ContentContext';
 
 interface GalleryPageProps {
   onNavigate: (page: PageRoute) => void;
@@ -22,13 +23,15 @@ const GALLERY_FILTERS: { id: GalleryCategory; label: string }[] = [
 ];
 
 export const GalleryPage: React.FC<GalleryPageProps> = ({ onNavigate }) => {
+  const { galleryItems } = useContent();
+  const allGalleryItems = galleryItems && galleryItems.length > 0 ? galleryItems : GALLERY_ITEMS;
   const [activeFilter, setActiveFilter] = useState<GalleryCategory>('all');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const filteredGallery =
     activeFilter === 'all'
-      ? GALLERY_ITEMS
-      : GALLERY_ITEMS.filter((item) => item.category === activeFilter);
+      ? allGalleryItems
+      : allGalleryItems.filter((item) => item.category === activeFilter);
 
   // Keyboard navigation for lightbox
   useEffect(() => {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, Users, AlertTriangle, CheckCircle2, Copy, MessageSquare, ShieldCheck } from 'lucide-react';
 import { RESTAURANT_CONFIG } from '../data/menuData';
 import { PageRoute } from '../components/Layout';
+import { useContent } from '../context/ContentContext';
 
 interface ReservationsPageProps {
   onNavigate: (page: PageRoute) => void;
@@ -30,6 +31,8 @@ interface FormErrors {
 }
 
 export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }) => {
+  const { restaurantConfig, bookReservation } = useContent();
+  const config = restaurantConfig?.name ? restaurantConfig : RESTAURANT_CONFIG;
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [formData, setFormData] = useState<ReservationFormData>({
@@ -47,6 +50,7 @@ export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }
   const [errors, setErrors] = useState<FormErrors>({});
   const [validatedSummary, setValidatedSummary] = useState<ReservationFormData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [bookingSaved, setBookingSaved] = useState(false);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -84,14 +88,29 @@ export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCopied(false);
     if (!validate()) {
       setValidatedSummary(null);
       return;
     }
-    // Honest handling: validate and prepare payload without faking a backend send
+    // Save directly to live persistent database / admin log
+    try {
+      await bookReservation({
+        guestName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        date: formData.date,
+        time: formData.time,
+        partySize: parseInt(formData.guests, 10) || 2,
+        seatingArea: formData.seatingArea,
+        notes: formData.occasionOrDietary,
+      });
+      setBookingSaved(true);
+    } catch (e) {
+      console.warn('Could not persist reservation to database:', e);
+    }
     setValidatedSummary({ ...formData });
   };
 
@@ -418,10 +437,12 @@ export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }
                   <CheckCircle2 className="w-5 h-5 text-[#C9A24B] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
                     <h3 className="font-display text-base font-bold text-[#F4ECDA]">
-                      Reservation Details Validated — Ready to Send
+                      {bookingSaved ? 'Reservation Request Received & Stored!' : 'Reservation Details Ready'}
                     </h3>
                     <p className="text-xs text-[#B8AD96] mt-1 leading-relaxed">
-                      <strong>Important Notice:</strong> An automated server-side booking database or email relay is not yet connected to this website, so your reservation has <strong>not</strong> been automatically transmitted.
+                      {bookingSaved
+                        ? 'Your request has been logged directly in the management database. To guarantee immediate table confirmation, you can also send the booking summary via WhatsApp below.'
+                        : 'Your reservation details have been prepared. Send via WhatsApp below for instant confirmation.'}
                     </p>
                   </div>
                 </div>
@@ -431,9 +452,9 @@ export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  {RESTAURANT_CONFIG.phone ? (
+                  {config.phone ? (
                     <a
-                      href={`https://wa.me/${RESTAURANT_CONFIG.phone}?text=${encodeURIComponent(
+                      href={`https://wa.me/${config.phone}?text=${encodeURIComponent(
                         formatBookingMessage(validatedSummary)
                       )}`}
                       target="_blank"
@@ -448,16 +469,16 @@ export const ReservationsPage: React.FC<ReservationsPageProps> = ({ onNavigate }
                   <button
                     type="button"
                     onClick={handleCopySummary}
-                    className="px-4 py-2.5 text-xs font-semibold bg-[#26221D] text-[#F4ECDA] border border-[#332E26] rounded-lg hover:border-[#C9A24B] flex items-center gap-1.5"
+                    className="px-4 py-2.5 text-xs font-semibold bg-[#26221D] text-[#F4ECDA] border border-[#332E26] rounded-lg hover:border-[#C9A24B] flex items-center gap-1.5 cursor-pointer"
                   >
                     <Copy className="w-4 h-4 text-[#C9A24B]" aria-hidden="true" />
                     <span>{copied ? 'Copied to Clipboard!' : 'Copy Booking Summary'}</span>
                   </button>
                 </div>
 
-                {!RESTAURANT_CONFIG.phone && (
+                {!config.phone && (
                   <p className="text-xs text-amber-300/90 bg-amber-950/30 border border-amber-700/40 rounded-lg p-3">
-                    <strong>Owner Setup Note:</strong> To enable one-click WhatsApp booking or server-side email delivery, set <code className="font-mono">RESTAURANT_CONFIG.phone</code> in <code className="font-mono">src/data/menuData.ts</code> (e.g. <code className="font-mono">"263771234567"</code>) or connect a <code className="font-mono">POST /api/reservations</code> backend endpoint.
+                    <strong>Owner Setup Note:</strong> To enable one-click WhatsApp booking, add your phone number in the <code className="font-mono">/admin</code> dashboard under <strong>Opening Hours &amp; Contact</strong> (e.g. <code className="font-mono">"263771234567"</code>).
                   </p>
                 )}
               </div>

@@ -1,6 +1,8 @@
 {
-  "name": "Afrotopia Café",
-  "description": "Afrotopia Café: fire-grilled meats, traditional Zimbabwean plates, sadza and Kariba bream, specialty coffee, craft cocktails, live music and sport.",
+  "name": "Velquarath Restaurant",
+  "description": "Velquarath Cafe & Restaurant: Fire-grilled meats, traditional Zimbabwean cuisine, craft cocktails, and admin management dashboard.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

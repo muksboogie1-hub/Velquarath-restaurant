@@ -5,25 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: './',
     plugins: [react(), tailwindcss()],
-    build: {
-      rollupOptions: {
-        input: {
-          main: path.resolve(import.meta.dirname, 'index.html'),
-          menu: path.resolve(import.meta.dirname, 'menu.html'),
-          story: path.resolve(import.meta.dirname, 'story.html'),
-          gallery: path.resolve(import.meta.dirname, 'gallery.html'),
-          reservations: path.resolve(import.meta.dirname, 'reservations.html'),
-          contact: path.resolve(import.meta.dirname, 'contact.html'),
-          privacy: path.resolve(import.meta.dirname, 'privacy.html'),
-          cookies: path.resolve(import.meta.dirname, 'cookies.html'),
-          refunds: path.resolve(import.meta.dirname, 'refunds.html'),
-          terms: path.resolve(import.meta.dirname, 'terms.html'),
-          accessibility: path.resolve(import.meta.dirname, 'accessibility.html'),
-        },
-      },
-    },
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),

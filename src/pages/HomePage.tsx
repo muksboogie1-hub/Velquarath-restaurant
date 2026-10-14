@@ -11,14 +11,20 @@ import {
 import { GENERATED_IMAGES } from '../data/images';
 import { ResilientImage } from '../components/ResilientImage';
 import { AmbientEmberCanvas } from '../components/AmbientEmberCanvas';
+import { useContent } from '../context/ContentContext';
 
 interface HomePageProps {
   onNavigate: (page: PageRoute, category?: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
-  const grillDishes = MENU_ITEMS.filter((item) => item.category === 'grill' && !item.comingSoon);
-  const traditionalHighlights = MENU_ITEMS.filter((item) => item.category === 'traditional').slice(0, 4);
+  const { menuItems, restaurantConfig, siteContent, appearance } = useContent();
+  const config = restaurantConfig?.name ? restaurantConfig : RESTAURANT_CONFIG;
+  const items = menuItems?.length ? menuItems : MENU_ITEMS;
+  const heroImageSrc = appearance?.customHeroUrl || GENERATED_IMAGES.heroFeast;
+
+  const grillDishes = items.filter((item) => item.category === 'grill' && !item.comingSoon && item.isAvailable !== false);
+  const traditionalHighlights = items.filter((item) => item.category === 'traditional' && item.isAvailable !== false).slice(0, 4);
 
   return (
     <div>
@@ -27,8 +33,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         {/* Background Feast Photography */}
         <div className="absolute inset-0 z-0">
           <ResilientImage
-            src={GENERATED_IMAGES.heroFeast}
-            alt="Velquarath Cafe candlelit feast with sticky BBQ pork ribs, traditional white sadza, slow-braised oxtail in a clay pot, and whole grilled Kariba bream"
+            src={heroImageSrc}
+            alt={`${config.name} candlelit feast with sticky BBQ pork ribs, traditional white sadza, slow-braised oxtail in a clay pot, and whole grilled Kariba bream`}
             loading="eager"
             containerClassName="w-full h-full"
             className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000"
@@ -51,13 +57,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="max-w-3xl"
           >
             <p className="text-xs sm:text-sm font-medium tracking-wide text-[#C9A24B] mb-3">
-              Off-the-Grill Meats · Traditional Zimbabwean Plates · Craft Cocktails · Live Music
+              {siteContent?.heroBadge || 'Off-the-Grill Meats · Traditional Zimbabwean Plates · Craft Cocktails · Live Music'}
             </p>
             <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F4ECDA] leading-[1.05]">
-              {RESTAURANT_CONFIG.name}
+              {siteContent?.heroTitle || config.name}
             </h1>
             <p className="mt-5 text-lg sm:text-xl text-[#F4ECDA]/90 leading-relaxed max-w-2xl">
-              {RESTAURANT_CONFIG.tagline}
+              {siteContent?.heroTagline || config.tagline}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">

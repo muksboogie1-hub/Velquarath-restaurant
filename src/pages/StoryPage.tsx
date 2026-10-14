@@ -5,12 +5,15 @@ import { GENERATED_IMAGES } from '../data/images';
 import { VIBE_HIGHLIGHTS, VIBE_SECTIONS } from '../data/menuData';
 import { ResilientImage } from '../components/ResilientImage';
 import { PageRoute } from '../components/Layout';
+import { useContent } from '../context/ContentContext';
 
 interface StoryPageProps {
   onNavigate: (page: PageRoute) => void;
 }
 
 export const StoryPage: React.FC<StoryPageProps> = ({ onNavigate }) => {
+  const { siteContent } = useContent();
+
   return (
     <div className="py-12 md:py-20 bg-[#141210] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,10 +29,10 @@ export const StoryPage: React.FC<StoryPageProps> = ({ onNavigate }) => {
               Our Story &amp; Philosophy
             </p>
             <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-[#F4ECDA] leading-tight">
-              Where Zimbabwean Heritage Meets the Open Flame
+              {siteContent?.storyHeadline || 'Where Zimbabwean Heritage Meets the Open Flame'}
             </h1>
             <p className="mt-5 text-base sm:text-lg text-[#B8AD96] leading-relaxed">
-              Velquarath Cafe was born from a simple conviction: that traditional Zimbabwean plates, smoky off-the-grill ribs, strong barista coffee, and cold craft cocktails belong together under one roof.
+              {siteContent?.storyIntro || 'Velquarath Cafe was born from a simple conviction: that traditional Zimbabwean plates, smoky off-the-grill ribs, strong barista coffee, and cold craft cocktails belong together under one roof.'}
             </p>
             <p className="mt-4 text-sm sm:text-base text-[#B8AD96] leading-relaxed">
               Whether you are stopping in for an early Afropolitan breakfast, gathering with colleagues over Oxtail &amp; Beans and steaming White or Brown Sadza, watching live sport on the big screen, or staying late by the fireplace for live music and an Afrotopia Gnt, our space is crafted to feel warm, unpretentious, and unmistakably African.

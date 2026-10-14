@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, Phone, Clock, AlertTriangle, CheckCircle2, Copy, Car, Accessibility } from 'lucide-react';
 import { RESTAURANT_CONFIG } from '../data/menuData';
 import { PageRoute } from '../components/Layout';
+import { useContent } from '../context/ContentContext';
 
 interface ContactPageProps {
   onNavigate: (page: PageRoute) => void;
@@ -23,6 +24,9 @@ interface ContactErrors {
 }
 
 export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
+  const { restaurantConfig } = useContent();
+  const config = restaurantConfig?.name ? restaurantConfig : RESTAURANT_CONFIG;
+
   const [form, setForm] = useState<ContactFormState>({
     name: '',
     phoneOrEmail: '',
@@ -108,7 +112,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     Location &amp; Address
                   </h2>
                   <p className="text-sm text-[#B8AD96] mt-1">
-                    {RESTAURANT_CONFIG.address}
+                    {config.address}
                   </p>
                 </div>
               </div>
@@ -120,15 +124,15 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     Phone &amp; WhatsApp
                   </h2>
                   <p className="text-sm text-[#B8AD96] mt-1">
-                    {RESTAURANT_CONFIG.phone ? (
+                    {config.phone ? (
                       <a
-                        href={`tel:+${RESTAURANT_CONFIG.phone}`}
+                        href={`tel:+${config.phone}`}
                         className="text-[#C9A24B] font-mono-num hover:underline"
                       >
-                        +{RESTAURANT_CONFIG.phone}
+                        +{config.phone}
                       </a>
                     ) : (
-                      <span>{RESTAURANT_CONFIG.displayPhone}</span>
+                      <span>{config.displayPhone}</span>
                     )}
                   </p>
                 </div>
@@ -141,7 +145,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     Opening Hours
                   </h2>
                   <div className="space-y-2 text-xs sm:text-sm">
-                    {RESTAURANT_CONFIG.hours.map((h) => (
+                    {(config.hours || []).map((h) => (
                       <div key={h.days} className="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span className="font-semibold text-[#F4ECDA]">{h.days}</span>
                         <span className="text-[#B8AD96]">{h.time}</span>

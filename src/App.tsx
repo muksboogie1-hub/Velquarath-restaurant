@@ -19,6 +19,9 @@ import {
   getStoredCookieConsent,
 } from './components/CookieConsentManager';
 import { RESTAURANT_CONFIG } from './data/menuData';
+import { ContentProvider, useContent } from './context/ContentContext';
+import { AdminLayout } from './admin/AdminLayout';
+import { AdminLogin } from './admin/AdminLogin';
 
 const VALID_ROUTES: PageRoute[] = [
   'home',
@@ -32,43 +35,39 @@ const VALID_ROUTES: PageRoute[] = [
   'refunds',
   'terms',
   'accessibility',
+  'admin',
 ];
 
 function resolveInitialRoute(): PageRoute {
+  // Check hash first (e.g. #admin, #menu)
   const hash = window.location.hash.replace(/^#\/?/, '').split('?')[0].toLowerCase();
   if (VALID_ROUTES.includes(hash as PageRoute)) {
     return hash as PageRoute;
   }
+
+  // Check pathname (e.g. /admin, /menu)
   const baseUrl = (import.meta.env.BASE_URL || '/').replace(/^\/+|\/+$/g, '').toLowerCase();
   let path = window.location.pathname
     .replace(/^\/+|\/+$/g, '')
     .replace(/\.html$/i, '')
     .toLowerCase();
+
   if (baseUrl && path.startsWith(baseUrl)) {
     path = path.slice(baseUrl.length).replace(/^\/+/, '');
   }
+
   if (path === 'index' || path === '') return 'home';
   if (VALID_ROUTES.includes(path as PageRoute)) {
     return path as PageRoute;
   }
+
   return 'home';
 }
 
-const PAGE_TITLES: Record<PageRoute, string> = {
-  home: `${RESTAURANT_CONFIG.name} | Fire-Grilled Meats, Traditional Zimbabwean Cuisine & Craft Cocktails`,
-  menu: `Menu | ${RESTAURANT_CONFIG.name} — Grill, Traditional Mains, Sadza, Brunch & Cocktails`,
-  story: `Our Story & Vibe | ${RESTAURANT_CONFIG.name}`,
-  gallery: `Food & Venue Gallery | ${RESTAURANT_CONFIG.name}`,
-  reservations: `Book a Table | ${RESTAURANT_CONFIG.name}`,
-  contact: `Contact & Opening Hours | ${RESTAURANT_CONFIG.name}`,
-  privacy: `Privacy Policy | ${RESTAURANT_CONFIG.name}`,
-  cookies: `Cookie Policy & Preferences | ${RESTAURANT_CONFIG.name}`,
-  refunds: `Refund & Cancellation Policy | ${RESTAURANT_CONFIG.name}`,
-  terms: `Terms & Conditions | ${RESTAURANT_CONFIG.name}`,
-  accessibility: `Accessibility Statement | ${RESTAURANT_CONFIG.name}`,
-};
+function MainApp() {
+  const { restaurantConfig, currentUser } = useContent();
+  const config = restaurantConfig?.name ? restaurantConfig : RESTAURANT_CONFIG;
 
-export default function App() {
   const [currentPage, setCurrentPage] = useState<PageRoute>(resolveInitialRoute);
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<string | undefined>(undefined);
   const [cookieModalOpen, setCookieModalOpen] = useState(false);
@@ -82,13 +81,28 @@ export default function App() {
       setCurrentPage(next);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   useEffect(() => {
-    document.title = PAGE_TITLES[currentPage] || PAGE_TITLES.home;
-  }, [currentPage]);
+    const pageTitles: Record<PageRoute, string> = {
+      home: `${config.name} | Fire-Grilled Meats, Traditional Zimbabwean Cuisine & Craft Cocktails`,
+      menu: `Menu | ${config.name} – Grill, Traditional Mains, Sadza, Brunch & Cocktails`,
+      story: `Our Story & Vibe | ${config.name}`,
+      gallery: `Food & Venue Gallery | ${config.name}`,
+      reservations: `Book a Table | ${config.name}`,
+      contact: `Contact & Opening Hours | ${config.name}`,
+      privacy: `Privacy Policy | ${config.name}`,
+      cookies: `Cookie Policy & Preferences | ${config.name}`,
+      refunds: `Refund & Cancellation Policy | ${config.name}`,
+      terms: `Terms & Conditions | ${config.name}`,
+      accessibility: `Accessibility Statement | ${config.name}`,
+      admin: `Admin Dashboard | ${config.name}`,
+    };
+    document.title = pageTitles[currentPage] || pageTitles.home;
+  }, [currentPage, config.name]);
 
   const handleNavigate = (page: PageRoute, category?: string) => {
     if (category) {
@@ -103,6 +117,25 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ADMIN VIEW: Isolated from public navigation
+  if (currentPage === 'admin') {
+    if (currentUser) {
+      return (
+        <AdminLayout
+          onNavigateHome={() => handleNavigate('home')}
+          onLogout={() => handleNavigate('home')}
+        />
+      );
+    }
+    return (
+      <AdminLogin
+        onLoginSuccess={() => handleNavigate('admin')}
+        onBackToSite={() => handleNavigate('home')}
+      />
+    );
+  }
+
+  // PUBLIC WEBSITE VIEW
   return (
     <Layout
       currentPage={currentPage}
@@ -157,5 +190,13 @@ export default function App() {
         onUpdateConsent={setCookieConsent}
       />
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <ContentProvider>
+      <MainApp />
+    </ContentProvider>
   );
 }

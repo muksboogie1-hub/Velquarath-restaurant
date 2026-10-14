@@ -8,6 +8,7 @@ import {
 } from '../data/menuData';
 import { ResilientImage } from '../components/ResilientImage';
 import { PageRoute } from '../components/Layout';
+import { useContent } from '../context/ContentContext';
 
 interface MenuPageProps {
   initialCategory?: string;
@@ -97,33 +98,39 @@ export const MenuPage: React.FC<MenuPageProps> = ({ initialCategory, onNavigate 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const { menuItems } = useContent();
+  const activeMenuItems = useMemo(() => {
+    return menuItems && menuItems.length > 0 ? menuItems : MENU_ITEMS;
+  }, [menuItems]);
+
   const isSearching = searchQuery.trim().length > 0;
 
   // Global search across ALL categories whenever a query is typed,
   // or category-filtered items when no search query is entered.
   const searchScoredItems = useMemo(() => {
     if (!isSearching) {
-      return MENU_ITEMS.filter(
+      return activeMenuItems.filter(
         (item) => selectedCategory === 'all' || item.category === selectedCategory
       );
     }
 
-    return MENU_ITEMS.map((item) => ({
-      item,
-      score: scoreMenuItem(item, searchQuery),
-    }))
+    return activeMenuItems
+      .map((item) => ({
+        item,
+        score: scoreMenuItem(item, searchQuery),
+      }))
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score)
       .map((entry) => entry.item);
-  }, [selectedCategory, searchQuery, isSearching]);
+  }, [activeMenuItems, selectedCategory, searchQuery, isSearching]);
 
   // Autocomplete recommendations shown in the dropdown
   const recommendedDropdownItems = useMemo(() => {
     if (!isSearching) {
-      return MENU_ITEMS.filter((i) => i.featured).slice(0, 6);
+      return activeMenuItems.filter((i) => i.featured).slice(0, 6);
     }
     return searchScoredItems.slice(0, 6);
-  }, [isSearching, searchScoredItems]);
+  }, [activeMenuItems, isSearching, searchScoredItems]);
 
   // Group items by category when not actively searching
   const groupedSections = useMemo(() => {
@@ -506,7 +513,11 @@ export const MenuPage: React.FC<MenuPageProps> = ({ initialCategory, onNavigate 
                               <h3 className="font-display text-lg font-bold text-[#F4ECDA]">
                                 {item.name}
                               </h3>
-                              {item.price ? (
+                              {item.isAvailable === false ? (
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-950/80 text-red-300 border border-red-800/60 shrink-0">
+                                  Sold Out
+                                </span>
+                              ) : item.price ? (
                                 <span className="font-mono-num text-base font-bold text-[#C9A24B] shrink-0">
                                   {item.price}
                                 </span>
