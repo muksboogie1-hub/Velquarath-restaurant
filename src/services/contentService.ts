@@ -96,35 +96,43 @@ async function isSupabaseSession(): Promise<boolean> {
 export async function fetchMenuItems(): Promise<MenuItem[]> {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('menu_items')
-        .select('*')
-        .order('display_order', { ascending: true });
+    const { data, error } = await client
+      .from('menu_items')
+      .select('*')
+      .order('display_order', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        return data.map((d) => ({
-          id: d.id,
-          name: d.name,
-          category: d.category,
-          categoryLabel: d.category_label || d.category,
-          price: d.price || undefined,
-          description: d.description || '',
-          image: d.image || '',
-          imageAlt: d.image_alt || d.name,
-          dietaryOrNote: d.dietary_or_note || undefined,
-          featured: Boolean(d.featured),
-          comingSoon: Boolean(d.coming_soon),
-          isAvailable: d.is_available !== false,
-          displayOrder: d.display_order ?? 0,
-        }));
-      }
-    } catch {
-      // Tables may not exist yet in Supabase; fallback gracefully
+    if (error) {
+      throw new Error(
+        error.code === 'PGRST205' || error.message?.includes('Could not find the table')
+          ? "Database table 'menu_items' not found in Supabase. Please run supabase-schema.sql in your Supabase SQL Editor."
+          : formatSupabaseError(error)
+      );
+    }
+
+    if (data && data.length > 0) {
+      return data.map((d) => ({
+        id: d.id,
+        name: d.name,
+        category: d.category,
+        categoryLabel: d.category_label || d.category,
+        price: d.price || undefined,
+        description: d.description || '',
+        image: d.image || '',
+        imageAlt: d.image_alt || d.name,
+        dietaryOrNote: d.dietary_or_note || undefined,
+        featured: Boolean(d.featured),
+        comingSoon: Boolean(d.coming_soon),
+        isAvailable: d.is_available !== false,
+        displayOrder: d.display_order ?? 0,
+      }));
+    }
+
+    if (data && data.length === 0) {
+      return [];
     }
   }
 
-  // Local fallback
+  // Local sandbox fallback (only reached when Supabase client is not configured)
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.MENU);
     if (cached) return JSON.parse(cached);
@@ -235,32 +243,37 @@ export async function deleteMenuItem(id: string): Promise<{ success: boolean; er
 export async function fetchRestaurantConfig(): Promise<RestaurantConfig> {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('restaurant_config')
-        .select('*')
-        .eq('id', 'main')
-        .single();
+    const { data, error } = await client
+      .from('restaurant_config')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle();
 
-      if (!error && data) {
-        return {
-          name: data.name || DEFAULT_RESTAURANT_CONFIG.name,
-          tagline: data.tagline || DEFAULT_RESTAURANT_CONFIG.tagline,
-          phone: data.phone || '',
-          displayPhone: data.display_phone || DEFAULT_RESTAURANT_CONFIG.displayPhone,
-          email: data.email || '',
-          address: data.address || DEFAULT_RESTAURANT_CONFIG.address,
-          city: data.city || 'Harare',
-          country: data.country || 'Zimbabwe',
-          hours: data.hours || DEFAULT_RESTAURANT_CONFIG.hours,
-          backendConfigured: true,
-        };
-      }
-    } catch {
-      // Table may not exist yet
+    if (error) {
+      throw new Error(
+        error.code === 'PGRST205' || error.message?.includes('Could not find the table')
+          ? "Database table 'restaurant_config' not found in Supabase. Please run supabase-schema.sql in your Supabase SQL Editor."
+          : formatSupabaseError(error)
+      );
+    }
+
+    if (data) {
+      return {
+        name: data.name || DEFAULT_RESTAURANT_CONFIG.name,
+        tagline: data.tagline || DEFAULT_RESTAURANT_CONFIG.tagline,
+        phone: data.phone || '',
+        displayPhone: data.display_phone || DEFAULT_RESTAURANT_CONFIG.displayPhone,
+        email: data.email || '',
+        address: data.address || DEFAULT_RESTAURANT_CONFIG.address,
+        city: data.city || 'Harare',
+        country: data.country || 'Zimbabwe',
+        hours: data.hours || DEFAULT_RESTAURANT_CONFIG.hours,
+        backendConfigured: true,
+      };
     }
   }
 
+  // Local sandbox fallback
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.CONFIG);
     if (cached) return JSON.parse(cached);
@@ -320,28 +333,33 @@ export async function saveRestaurantConfig(config: RestaurantConfig): Promise<{ 
 export async function fetchSiteContent(): Promise<SiteContent> {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('site_content')
-        .select('*')
-        .eq('id', 'main')
-        .single();
+    const { data, error } = await client
+      .from('site_content')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle();
 
-      if (!error && data) {
-        return {
-          heroBadge: data.hero_badge || DEFAULT_SITE_CONTENT.heroBadge,
-          heroTitle: data.hero_title || DEFAULT_SITE_CONTENT.heroTitle,
-          heroTagline: data.hero_tagline || DEFAULT_SITE_CONTENT.heroTagline,
-          storyHeadline: data.story_headline || DEFAULT_SITE_CONTENT.storyHeadline,
-          storyIntro: data.story_intro || DEFAULT_SITE_CONTENT.storyIntro,
-          patioTagline: data.patio_tagline || DEFAULT_SITE_CONTENT.patioTagline,
-        };
-      }
-    } catch {
-      // Table may not exist yet
+    if (error) {
+      throw new Error(
+        error.code === 'PGRST205' || error.message?.includes('Could not find the table')
+          ? "Database table 'site_content' not found in Supabase. Please run supabase-schema.sql in your Supabase SQL Editor."
+          : formatSupabaseError(error)
+      );
+    }
+
+    if (data) {
+      return {
+        heroBadge: data.hero_badge || DEFAULT_SITE_CONTENT.heroBadge,
+        heroTitle: data.hero_title || DEFAULT_SITE_CONTENT.heroTitle,
+        heroTagline: data.hero_tagline || DEFAULT_SITE_CONTENT.heroTagline,
+        storyHeadline: data.story_headline || DEFAULT_SITE_CONTENT.storyHeadline,
+        storyIntro: data.story_intro || DEFAULT_SITE_CONTENT.storyIntro,
+        patioTagline: data.patio_tagline || DEFAULT_SITE_CONTENT.patioTagline,
+      };
     }
   }
 
+  // Local sandbox fallback
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.CONTENT);
     if (cached) return JSON.parse(cached);
@@ -398,29 +416,38 @@ export async function saveSiteContent(content: SiteContent): Promise<{ success: 
 export async function fetchGalleryItems(): Promise<GalleryItem[]> {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('gallery_items')
-        .select('*')
-        .order('display_order', { ascending: true });
+    const { data, error } = await client
+      .from('gallery_items')
+      .select('*')
+      .order('display_order', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        return data.map((d) => ({
-          id: d.id,
-          title: d.title,
-          caption: d.caption || '',
-          category: d.category,
-          categoryLabel: d.category_label || d.category,
-          src: d.src,
-          alt: d.alt || d.title,
-          spanWide: Boolean(d.span_wide),
-        }));
-      }
-    } catch {
-      // Table may not exist yet
+    if (error) {
+      throw new Error(
+        error.code === 'PGRST205' || error.message?.includes('Could not find the table')
+          ? "Database table 'gallery_items' not found in Supabase. Please run supabase-schema.sql in your Supabase SQL Editor."
+          : formatSupabaseError(error)
+      );
+    }
+
+    if (data && data.length > 0) {
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        caption: d.caption || '',
+        category: d.category,
+        categoryLabel: d.category_label || d.category,
+        src: d.src,
+        alt: d.alt || d.title,
+        spanWide: Boolean(d.span_wide),
+      }));
+    }
+
+    if (data && data.length === 0) {
+      return [];
     }
   }
 
+  // Local sandbox fallback
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.GALLERY);
     if (cached) return JSON.parse(cached);
@@ -509,29 +536,34 @@ export async function deleteGalleryItem(id: string): Promise<{ success: boolean;
 export async function fetchAppearanceSettings(): Promise<AppearanceSettings> {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('appearance_settings')
-        .select('*')
-        .eq('id', 'main')
-        .single();
+    const { data, error } = await client
+      .from('appearance_settings')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle();
 
-      if (!error && data) {
-        return {
-          bannerActive: Boolean(data.banner_active),
-          bannerText: data.banner_text || DEFAULT_APPEARANCE.bannerText,
-          bannerLink: data.banner_link || DEFAULT_APPEARANCE.bannerLink,
-          accentColor: data.accent_color || DEFAULT_APPEARANCE.accentColor,
-          accentHover: data.accent_hover || DEFAULT_APPEARANCE.accentHover,
-          customLogoUrl: data.custom_logo_url || undefined,
-          customHeroUrl: data.custom_hero_url || undefined,
-        };
-      }
-    } catch {
-      // Table may not exist yet
+    if (error) {
+      throw new Error(
+        error.code === 'PGRST205' || error.message?.includes('Could not find the table')
+          ? "Database table 'appearance_settings' not found in Supabase. Please run supabase-schema.sql in your Supabase SQL Editor."
+          : formatSupabaseError(error)
+      );
+    }
+
+    if (data) {
+      return {
+        bannerActive: Boolean(data.banner_active),
+        bannerText: data.banner_text || DEFAULT_APPEARANCE.bannerText,
+        bannerLink: data.banner_link || DEFAULT_APPEARANCE.bannerLink,
+        accentColor: data.accent_color || DEFAULT_APPEARANCE.accentColor,
+        accentHover: data.accent_hover || DEFAULT_APPEARANCE.accentHover,
+        customLogoUrl: data.custom_logo_url || undefined,
+        customHeroUrl: data.custom_hero_url || undefined,
+      };
     }
   }
 
+  // Local sandbox fallback
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.APPEARANCE);
     if (cached) return JSON.parse(cached);

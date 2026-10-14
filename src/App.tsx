@@ -22,6 +22,7 @@ import { RESTAURANT_CONFIG } from './data/menuData';
 import { ContentProvider, useContent } from './context/ContentContext';
 import { AdminLayout } from './admin/AdminLayout';
 import { AdminLogin } from './admin/AdminLogin';
+import { BrandedLoadingScreen } from './components/BrandedLoadingScreen';
 
 const VALID_ROUTES: PageRoute[] = [
   'home',
@@ -65,7 +66,15 @@ function resolveInitialRoute(): PageRoute {
 }
 
 function MainApp() {
-  const { restaurantConfig, currentUser } = useContent();
+  const {
+    restaurantConfig,
+    currentUser,
+    loading,
+    initialLoadError,
+    isOfflineFallback,
+    dismissOfflineFallback,
+    refreshAll,
+  } = useContent();
   const config = restaurantConfig?.name ? restaurantConfig : RESTAURANT_CONFIG;
 
   const [currentPage, setCurrentPage] = useState<PageRoute>(resolveInitialRoute);
@@ -135,13 +144,42 @@ function MainApp() {
     );
   }
 
-  // PUBLIC WEBSITE VIEW
+  // PUBLIC WEBSITE VIEW: Prevent flash of outdated hardcoded content
+  // 1. Initial Loading Screen while fetching live Supabase data
+  if (loading) {
+    return <BrandedLoadingScreen />;
+  }
+
+  // 2. Connection Failure / Timeout Screen
+  if (initialLoadError && !isOfflineFallback) {
+    return (
+      <BrandedLoadingScreen
+        loadError={initialLoadError}
+        onRetry={refreshAll}
+        onContinueOffline={dismissOfflineFallback}
+      />
+    );
+  }
+
+  // 3. Render Public Application
   return (
     <Layout
       currentPage={currentPage}
       onNavigate={(page) => handleNavigate(page)}
       onOpenCookieModal={() => setCookieModalOpen(true)}
     >
+      {isOfflineFallback && (
+        <div className="bg-[#261E14] border-b border-[#C9A24B]/30 px-4 py-2 text-center text-xs text-[#E2D9C5] flex flex-wrap items-center justify-center gap-2">
+          <span>⚠️ Showing archived sample menu. Daily board pricing &amp; seasonal availability may differ.</span>
+          <button
+            type="button"
+            onClick={refreshAll}
+            className="underline text-[#C9A24B] hover:text-[#DFB85E] font-semibold cursor-pointer ml-1"
+          >
+            Retry Live Sync
+          </button>
+        </div>
+      )}
       {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
       {currentPage === 'menu' && (
         <MenuPage

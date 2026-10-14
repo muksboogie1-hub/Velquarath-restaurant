@@ -361,7 +361,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ initialCategory, onNavigate 
 
             <div className="flex items-center justify-between md:justify-end gap-3 text-xs text-[#B8AD96] font-mono-num">
               <span>
-                Showing {searchScoredItems.length} of {MENU_ITEMS.length} items
+                Showing {searchScoredItems.length} of {activeMenuItems.length} items
               </span>
               {(isSearching || selectedCategory !== 'all') && (
                 <button

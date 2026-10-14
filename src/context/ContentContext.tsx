@@ -44,6 +44,9 @@ interface ContentContextType {
   currentUser: AdminUser | null;
   loading: boolean;
   isSupabaseActive: boolean;
+  initialLoadError: string | null;
+  isOfflineFallback: boolean;
+  dismissOfflineFallback: () => void;
   refreshAll: () => Promise<void>;
   updateMenuItem: (item: MenuItem) => Promise<OperationResult>;
   removeMenuItem: (id: string) => Promise<OperationResult>;
@@ -82,11 +85,24 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(false);
+  const [initialLoadError, setInitialLoadError] = useState<string | null>(null);
+  const [isOfflineFallback, setIsOfflineFallback] = useState<boolean>(false);
 
   const refreshAll = async () => {
+    setLoading(true);
+    setInitialLoadError(null);
+    const configured = isSupabaseConfigured();
+    setIsSupabaseActive(configured);
+
+    if (!configured) {
+      // Preview Sandbox / Unconfigured mode: display fallback without error
+      setIsOfflineFallback(true);
+      setLoading(false);
+      return;
+    }
+
     try {
-      setIsSupabaseActive(isSupabaseConfigured());
-      const [m, cfg, c, g, app, res, u] = await Promise.all([
+      const fetchPromise = Promise.all([
         fetchMenuItems(),
         fetchRestaurantConfig(),
         fetchSiteContent(),
@@ -95,6 +111,20 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         fetchReservations(),
         getCurrentAdminUser(),
       ]);
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                'Connection to live restaurant database timed out. Network may be slow or unavailable.'
+              )
+            ),
+          7500
+        )
+      );
+
+      const [m, cfg, c, g, app, res, u] = await Promise.race([fetchPromise, timeoutPromise]);
       setMenuItems(m);
       setRestaurantConfig(cfg);
       setSiteContent(c);
@@ -102,11 +132,21 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
       setAppearance(app);
       setReservations(res);
       setCurrentUser(u);
-    } catch (e) {
-      console.error('Error loading content:', e);
+      setIsOfflineFallback(false);
+      setInitialLoadError(null);
+    } catch (e: any) {
+      console.error('Error loading content from Supabase:', e);
+      setInitialLoadError(
+        e?.message || 'Unable to connect to live restaurant database. Daily board and pricing may be unavailable.'
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const dismissOfflineFallback = () => {
+    setIsOfflineFallback(true);
+    setInitialLoadError(null);
   };
 
   useEffect(() => {
@@ -225,6 +265,9 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         currentUser,
         loading,
         isSupabaseActive,
+        initialLoadError,
+        isOfflineFallback,
+        dismissOfflineFallback,
         refreshAll,
         updateMenuItem: handleUpdateMenuItem,
         removeMenuItem: handleRemoveMenuItem,
