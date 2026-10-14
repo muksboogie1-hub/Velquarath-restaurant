@@ -900,6 +900,7 @@ export interface SupabaseHealthReport {
   userAuthenticated: boolean;
   menuTable: boolean;
   configTable: boolean;
+  adminTable: boolean;
   storageBucket: boolean;
   error?: string;
 }
@@ -912,6 +913,7 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealthReport> {
     userAuthenticated: Boolean(user?.isSupabaseAuth),
     menuTable: false,
     configTable: false,
+    adminTable: false,
     storageBucket: false,
   };
 
@@ -925,6 +927,9 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealthReport> {
 
     const { error: cErr } = await client.from('restaurant_config').select('id').limit(1);
     report.configTable = !cErr;
+
+    const { error: aErr } = await client.from('admin_users').select('id').limit(1);
+    report.adminTable = !aErr;
 
     const { data: buckets } = await client.storage.listBuckets();
     report.storageBucket = Boolean(

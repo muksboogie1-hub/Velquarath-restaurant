@@ -12,6 +12,7 @@ import {
   Menu as MenuIcon,
   X,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { MenuManager } from './MenuManager';
@@ -20,6 +21,7 @@ import { BrandingManager } from './BrandingManager';
 import { AppearanceManager } from './AppearanceManager';
 import { HoursAndContactManager } from './HoursAndContactManager';
 import { ReservationsManager } from './ReservationsManager';
+import { StaffManager } from './StaffManager';
 import { SiteSettingsManager } from './SiteSettingsManager';
 import { adminSignOut } from '../services/authService';
 
@@ -30,6 +32,7 @@ export type AdminTab =
   | 'appearance'
   | 'hours'
   | 'reservations'
+  | 'staff'
   | 'settings';
 
 interface AdminLayoutProps {
@@ -62,6 +65,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onNavigateHome, onLogo
       icon: Calendar,
       badge: pendingReservationsCount > 0 ? pendingReservationsCount : undefined,
     },
+    { id: 'staff', label: 'Staff & Admins', icon: Users },
     { id: 'settings', label: 'Site Settings', icon: Settings },
   ];
 
@@ -235,6 +239,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onNavigateHome, onLogo
           {activeTab === 'appearance' && <AppearanceManager />}
           {activeTab === 'hours' && <HoursAndContactManager />}
           {activeTab === 'reservations' && <ReservationsManager />}
+          {activeTab === 'staff' && <StaffManager />}
           {activeTab === 'settings' && <SiteSettingsManager onLoggedOut={handleSignOut} />}
         </main>
       </div>

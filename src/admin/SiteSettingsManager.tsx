@@ -181,11 +181,11 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogg
         </div>
 
         {healthReport ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
             {/* Table Health */}
             <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#F4ECDA]">Database Tables</span>
+                <span className="text-xs font-semibold text-[#F4ECDA]">Public Tables</span>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                     healthReport.menuTable && healthReport.configTable
@@ -198,8 +198,29 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogg
               </div>
               <p className="text-[11px] text-[#B8AD96]">
                 {healthReport.menuTable && healthReport.configTable
-                  ? 'All 6 database tables exist and are accessible.'
-                  : "Tables not created yet. Please execute 'supabase-schema.sql' in your Supabase SQL Editor."}
+                  ? 'All public content tables exist and are accessible.'
+                  : "Tables not created yet. Please execute 'supabase-schema.sql' in your SQL Editor."}
+              </p>
+            </div>
+
+            {/* Admin RLS Whitelist Table */}
+            <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#F4ECDA]">RLS Whitelist</span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                    healthReport.adminTable
+                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
+                      : 'bg-red-950/80 text-red-300 border border-red-700/50'
+                  }`}
+                >
+                  {healthReport.adminTable ? '✓ Protected' : '✗ Missing'}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#B8AD96]">
+                {healthReport.adminTable
+                  ? 'admin_users table active with is_admin() RLS authorization.'
+                  : 'admin_users table not found. Execute the updated supabase-schema.sql.'}
               </p>
             </div>
 
@@ -220,7 +241,7 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogg
               <p className="text-[11px] text-[#B8AD96]">
                 {healthReport.storageBucket
                   ? "Bucket 'restaurant-media' is active for photo uploads."
-                  : "Bucket 'restaurant-media' not found. Run 'supabase-schema.sql' or create it under Storage -> New Bucket."}
+                  : "Bucket 'restaurant-media' not found. Create under Storage -> New Bucket."}
               </p>
             </div>
 

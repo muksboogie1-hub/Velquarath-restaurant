@@ -1,5 +1,5 @@
 -- =====================================================================
--- VELQUARATH CAFE & RESTAURANT - IDEMPOTENT SUPABASE SETUP SCRIPT
+-- VELQUARATH CAFE & RESTAURANT - PRODUCTION HARDENED SUPABASE SETUP
 -- =====================================================================
 -- Instructions:
 -- 1. Open your Supabase Dashboard: https://supabase.com/dashboard
@@ -114,8 +114,19 @@ CREATE TABLE IF NOT EXISTS public.reservations (
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- 8. AUTHORIZED ADMINISTRATOR WHITELIST TABLE
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    role TEXT DEFAULT 'admin', -- 'owner', 'manager', 'admin'
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
 -- =====================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ROW LEVEL SECURITY (RLS) POLICIES & AUTHORIZATION FUNCTION
 -- =====================================================================
 
 ALTER TABLE public.menu_items ENABLE ROW LEVEL SECURITY;
@@ -124,6 +135,44 @@ ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.appearance_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+-- Security Definer function to check if the caller is an active verified administrator
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.admin_users
+        WHERE user_id = auth.uid() AND is_active = TRUE
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- Trigger function: automatically enrolls any registered auth user whose email exists in admin_users,
+-- or automatically registers the very first user as the primary 'owner'
+CREATE OR REPLACE FUNCTION public.handle_admin_auth_sync()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if email exists in admin_users and link user_id
+    UPDATE public.admin_users
+    SET user_id = NEW.id, updated_at = NOW()
+    WHERE LOWER(email) = LOWER(NEW.email);
+
+    -- If no admins exist at all in admin_users, automatically grant the first registered user 'owner' role
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE is_active = TRUE) THEN
+        INSERT INTO public.admin_users (user_id, email, role, is_active)
+        VALUES (NEW.id, NEW.email, 'owner', TRUE)
+        ON CONFLICT (email) DO UPDATE SET user_id = NEW.id, is_active = TRUE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_admin_sync ON auth.users;
+CREATE TRIGGER on_auth_user_created_admin_sync
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_admin_auth_sync();
 
 -- 1. PUBLIC READ POLICIES (Anyone can see menu, config, content, gallery, appearance)
 DROP POLICY IF EXISTS "Public can view menu items" ON public.menu_items;
@@ -145,30 +194,34 @@ CREATE POLICY "Public can view appearance settings" ON public.appearance_setting
 DROP POLICY IF EXISTS "Public can submit reservations" ON public.reservations;
 CREATE POLICY "Public can submit reservations" ON public.reservations FOR INSERT WITH CHECK (true);
 
--- 3. ADMIN WRITE POLICIES (Only authenticated admins can add, update, or delete)
+-- 3. ADMIN-ONLY POLICIES (Only authorized admins in public.admin_users can read/write protected tables)
 DROP POLICY IF EXISTS "Admin full access to menu_items" ON public.menu_items;
 CREATE POLICY "Admin full access to menu_items" ON public.menu_items FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to restaurant_config" ON public.restaurant_config;
 CREATE POLICY "Admin full access to restaurant_config" ON public.restaurant_config FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to site_content" ON public.site_content;
 CREATE POLICY "Admin full access to site_content" ON public.site_content FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to gallery_items" ON public.gallery_items;
 CREATE POLICY "Admin full access to gallery_items" ON public.gallery_items FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to appearance_settings" ON public.appearance_settings;
 CREATE POLICY "Admin full access to appearance_settings" ON public.appearance_settings FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to reservations" ON public.reservations;
 CREATE POLICY "Admin full access to reservations" ON public.reservations FOR ALL 
-USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Admin full access to admin_users" ON public.admin_users;
+CREATE POLICY "Admin full access to admin_users" ON public.admin_users FOR ALL 
+USING (public.is_admin() OR user_id = auth.uid()) WITH CHECK (public.is_admin() OR user_id = auth.uid());
 
 -- =====================================================================
 -- STORAGE BUCKET: restaurant-media (For food photos and hero banners)
@@ -194,20 +247,20 @@ USING (bucket_id = 'restaurant-media');
 DROP POLICY IF EXISTS "Admin can upload to restaurant-media" ON storage.objects;
 CREATE POLICY "Admin can upload to restaurant-media" 
 ON storage.objects FOR INSERT 
-WITH CHECK (bucket_id = 'restaurant-media' AND auth.role() = 'authenticated');
+WITH CHECK (bucket_id = 'restaurant-media' AND public.is_admin());
 
 DROP POLICY IF EXISTS "Admin can update restaurant-media" ON storage.objects;
 CREATE POLICY "Admin can update restaurant-media" 
 ON storage.objects FOR UPDATE 
-USING (bucket_id = 'restaurant-media' AND auth.role() = 'authenticated');
+USING (bucket_id = 'restaurant-media' AND public.is_admin());
 
 DROP POLICY IF EXISTS "Admin can delete from restaurant-media" ON storage.objects;
 CREATE POLICY "Admin can delete from restaurant-media" 
 ON storage.objects FOR DELETE 
-USING (bucket_id = 'restaurant-media' AND auth.role() = 'authenticated');
+USING (bucket_id = 'restaurant-media' AND public.is_admin());
 
 -- =====================================================================
--- INITIAL DEFAULT RECORDS
+-- INITIAL DEFAULT RECORDS & OWNER BOOTSTRAP
 -- =====================================================================
 
 INSERT INTO public.restaurant_config (id, name, tagline, display_phone, email, address, city, country)
@@ -224,3 +277,8 @@ VALUES (
 
 INSERT INTO public.site_content (id) VALUES ('main') ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.appearance_settings (id) VALUES ('main') ON CONFLICT (id) DO NOTHING;
+
+-- Pre-seed owner email into admin_users so current admin account is immediately active upon schema execution
+INSERT INTO public.admin_users (email, role, is_active)
+VALUES ('velquarath@gmail.com', 'owner', TRUE)
+ON CONFLICT (email) DO NOTHING;
