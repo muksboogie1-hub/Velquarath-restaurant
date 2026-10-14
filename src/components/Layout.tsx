@@ -65,29 +65,19 @@ export const Layout: React.FC<LayoutProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
-  // Lock background page scroll when mobile menu is open
+  // Lock background page scroll cleanly when mobile menu is open
   useEffect(() => {
     if (!mobileMenuOpen) return;
-    const scrollY = window.scrollY;
+
     const originalBodyOverflow = document.body.style.overflow;
-    const originalBodyPosition = document.body.style.position;
-    const originalBodyTop = document.body.style.top;
-    const originalBodyWidth = document.body.style.width;
     const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
 
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
-      document.body.style.position = originalBodyPosition;
-      document.body.style.top = originalBodyTop;
-      document.body.style.width = originalBodyWidth;
-      window.scrollTo(0, scrollY);
     };
   }, [mobileMenuOpen]);
 
@@ -188,7 +178,7 @@ export const Layout: React.FC<LayoutProps> = ({
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-drawer"
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              className="md:hidden p-2 text-[#B8AD96] hover:text-[#F4ECDA] hover:bg-[#1E1B17] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]"
+              className="md:hidden p-2 text-[#B8AD96] hover:text-[#F4ECDA] hover:bg-[#1E1B17] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] cursor-pointer"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6" aria-hidden="true" />
@@ -198,16 +188,26 @@ export const Layout: React.FC<LayoutProps> = ({
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Drawer with Accessible Backdrop */}
-        {mobileMenuOpen && (
+      {/* Mobile Navigation Drawer with Accessible Backdrop (Rendered outside header to avoid backdrop-filter containing block constraint) */}
+      {mobileMenuOpen && (
+        <div className="md:hidden">
+          {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 top-16 z-40 bg-[#141210]/95 backdrop-blur-md md:hidden overflow-y-auto"
+            className="fixed inset-0 top-16 z-40 bg-black/70 backdrop-blur-sm cursor-pointer"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Scrollable Navigation Drawer */}
+          <nav
             id="mobile-navigation-drawer"
             aria-label="Mobile navigation"
+            className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-[#1E1B17] border-b border-[#332E26] shadow-2xl p-6"
           >
-            <div className="p-6 space-y-4 max-w-sm mx-auto">
-              <nav className="flex flex-col space-y-2">
+            <div className="max-w-sm mx-auto space-y-4">
+              <div className="flex flex-col space-y-2">
                 {PRIMARY_NAV_ITEMS.map((item) => {
                   const isActive = currentPage === item.id;
                   return (
@@ -219,7 +219,7 @@ export const Layout: React.FC<LayoutProps> = ({
                       className={`px-4 py-3 rounded-xl text-base font-medium transition-colors ${
                         isActive
                           ? 'text-[#141210] bg-[#C9A24B] font-semibold'
-                          : 'text-[#F4ECDA] hover:bg-[#1E1B17]'
+                          : 'text-[#F4ECDA] hover:bg-[#26221D]'
                       }`}
                     >
                       {item.label}
@@ -233,16 +233,35 @@ export const Layout: React.FC<LayoutProps> = ({
                 >
                   Book a Table
                 </a>
-              </nav>
-              <div className="pt-6 border-t border-[#332E26] space-y-2 text-xs text-[#B8AD96]">
+              </div>
+
+              <div className="pt-4 border-t border-[#332E26] space-y-2 text-xs text-[#B8AD96]">
                 <p className="text-[#F4ECDA] font-medium">{config.name}</p>
                 <p>{config.address}</p>
                 <p>{config.displayPhone}</p>
               </div>
+
+              <div className="pt-2 border-t border-[#332E26]/60">
+                <p className="text-[11px] font-semibold text-[#736B5E] uppercase tracking-wider mb-2">
+                  Legal &amp; Policies
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {LEGAL_NAV_ITEMS.map((item) => (
+                    <a
+                      key={item.id}
+                      href={`#${item.id}`}
+                      onClick={(e) => handleLinkClick(e, item.id)}
+                      className="text-[#B8AD96] hover:text-[#C9A24B] py-1 transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </header>
+          </nav>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main id="main-content" className="flex-1">

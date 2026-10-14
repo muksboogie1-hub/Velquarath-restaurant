@@ -140,7 +140,12 @@ ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 -- Security Definer function to check if the caller is an active verified administrator.
 -- Checks both direct user_id link and cryptographically verified JWT email in public.admin_users.
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = public, pg_temp
+AS $$
 BEGIN
     IF auth.uid() IS NULL THEN
         RETURN FALSE;
@@ -158,11 +163,17 @@ BEGIN
         AND is_active = TRUE
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$;
 
 -- Dedicated RPC function for authenticated clients to sync their user_id upon login
 CREATE OR REPLACE FUNCTION public.sync_current_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_affected_rows integer;
 BEGIN
     IF auth.uid() IS NULL OR (auth.jwt() ->> 'email') IS NULL THEN
         RETURN FALSE;
@@ -174,32 +185,33 @@ BEGIN
       AND (user_id IS NULL OR user_id <> auth.uid())
       AND is_active = TRUE;
 
-    RETURN FOUND;
+    GET DIAGNOSTICS v_affected_rows = ROW_COUNT;
+    RETURN v_affected_rows > 0;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
+REVOKE EXECUTE ON FUNCTION public.sync_current_admin() FROM public;
 GRANT EXECUTE ON FUNCTION public.sync_current_admin() TO authenticated;
 
--- Trigger function: automatically enrolls any registered auth user whose email exists in admin_users,
--- or automatically registers the very first user as the primary 'owner'
+-- Trigger function: automatically associates registered auth user_id if their email
+-- already exists in the approved admin_users whitelist table.
+-- NEVER automatically promotes unknown users to administrator or owner.
 CREATE OR REPLACE FUNCTION public.handle_admin_auth_sync()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
-    -- Check if email exists in admin_users and link user_id
+    -- Only associate user_id if email already exists in approved admin_users whitelist
     UPDATE public.admin_users
     SET user_id = NEW.id, updated_at = NOW()
-    WHERE LOWER(email) = LOWER(NEW.email);
-
-    -- If no admins exist at all in admin_users, automatically grant the first registered user 'owner' role
-    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE is_active = TRUE) THEN
-        INSERT INTO public.admin_users (user_id, email, role, is_active)
-        VALUES (NEW.id, NEW.email, 'owner', TRUE)
-        ON CONFLICT (email) DO UPDATE SET user_id = NEW.id, is_active = TRUE;
-    END IF;
+    WHERE LOWER(email) = LOWER(NEW.email)
+      AND is_active = TRUE;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created_admin_sync ON auth.users;
 CREATE TRIGGER on_auth_user_created_admin_sync
@@ -328,24 +340,11 @@ INSERT INTO public.admin_users (email, role, is_active)
 VALUES ('codictobi@gmail.com', 'owner', TRUE)
 ON CONFLICT (email) DO UPDATE SET is_active = TRUE;
 
--- Immediately synchronize any existing registered Supabase auth users to admin_users
+-- Immediately synchronize existing approved Supabase auth users to admin_users
 UPDATE public.admin_users a
 SET user_id = u.id, updated_at = NOW()
 FROM auth.users u
 WHERE LOWER(a.email) = LOWER(u.email)
-  AND (a.user_id IS NULL OR a.user_id <> u.id);
+  AND (a.user_id IS NULL OR a.user_id <> u.id)
+  AND a.is_active = TRUE;
 
--- If admin_users has no linked active users yet, safely link the first registered auth user as owner
-DO $$
-DECLARE
-    v_first_user RECORD;
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id IS NOT NULL AND is_active = TRUE) THEN
-        SELECT id, email INTO v_first_user FROM auth.users ORDER BY created_at ASC LIMIT 1;
-        IF v_first_user.id IS NOT NULL THEN
-            INSERT INTO public.admin_users (user_id, email, role, is_active)
-            VALUES (v_first_user.id, v_first_user.email, 'owner', TRUE)
-            ON CONFLICT (email) DO UPDATE SET user_id = v_first_user.id, is_active = TRUE;
-        END IF;
-    END IF;
-END $$;

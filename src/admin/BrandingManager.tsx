@@ -30,6 +30,10 @@ export const BrandingManager: React.FC = () => {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [gallerySavedMsg, setGallerySavedMsg] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // Gallery item form
   const [showAddModal, setShowAddModal] = useState(false);
@@ -108,17 +112,41 @@ export const BrandingManager: React.FC = () => {
       spanWide: Boolean(newGalleryItem.spanWide),
     };
 
-    await addGalleryItem(item);
-    setShowAddModal(false);
-    setNewGalleryItem({
-      title: '',
-      caption: '',
-      category: 'traditional',
-      categoryLabel: 'Traditional & Grill',
-      src: '',
-      alt: '',
-      spanWide: false,
-    });
+    setGallerySavedMsg(null);
+    const res = await addGalleryItem(item);
+    if (res.success) {
+      setGallerySavedMsg({ type: 'success', message: 'Photo added to gallery successfully!' });
+      setTimeout(() => setGallerySavedMsg(null), 3500);
+      setShowAddModal(false);
+      setNewGalleryItem({
+        title: '',
+        caption: '',
+        category: 'traditional',
+        categoryLabel: 'Traditional & Grill',
+        src: '',
+        alt: '',
+        spanWide: false,
+      });
+    } else {
+      setGallerySavedMsg({
+        type: 'error',
+        message: res.error || 'Failed to add photo to gallery. Please check database permissions.',
+      });
+    }
+  };
+
+  const handleRemoveGallery = async (id: string) => {
+    setGallerySavedMsg(null);
+    const res = await removeGalleryItem(id);
+    if (!res.success) {
+      setGallerySavedMsg({
+        type: 'error',
+        message: res.error || 'Failed to remove gallery photo from database.',
+      });
+    } else {
+      setGallerySavedMsg({ type: 'success', message: 'Photo removed from gallery.' });
+      setTimeout(() => setGallerySavedMsg(null), 3000);
+    }
   };
 
   return (
@@ -236,6 +264,28 @@ export const BrandingManager: React.FC = () => {
           </button>
         </div>
 
+        {gallerySavedMsg && (
+          <div
+            className={`p-4 rounded-xl border text-xs flex items-start gap-2.5 ${
+              gallerySavedMsg.type === 'error'
+                ? 'bg-red-950/70 border-red-700/70 text-red-200'
+                : 'bg-emerald-950/60 border-emerald-700/60 text-emerald-200'
+            }`}
+          >
+            {gallerySavedMsg.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1 leading-relaxed">
+              <span className="font-semibold block mb-0.5">
+                {gallerySavedMsg.type === 'error' ? 'Database Save Error' : 'Success'}
+              </span>
+              <span>{gallerySavedMsg.message}</span>
+            </div>
+          </div>
+        )}
+
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {galleryItems.map((item) => (
@@ -270,7 +320,7 @@ export const BrandingManager: React.FC = () => {
               <div className="p-3.5 pt-0 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => removeGalleryItem(item.id)}
+                  onClick={() => handleRemoveGallery(item.id)}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#26221D] hover:bg-red-950/60 text-[#B8AD96] hover:text-red-400 text-xs transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

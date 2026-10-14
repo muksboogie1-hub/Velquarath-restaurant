@@ -118,14 +118,12 @@
     var backdrop = document.getElementById('mobile-menu-backdrop');
     if (!toggleBtn || !drawer || !backdrop) return;
 
-    var lockedScrollY = 0;
     var isOpen = false;
 
     function openMenu() {
       isOpen = true;
-      lockedScrollY = window.scrollY || window.pageYOffset || 0;
-      document.body.classList.add('menu-locked');
-      document.body.style.top = '-' + lockedScrollY + 'px';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
       drawer.classList.add('open');
       backdrop.classList.add('open');
       toggleBtn.setAttribute('aria-expanded', 'true');
@@ -136,9 +134,8 @@
     function closeMenu() {
       if (!isOpen) return;
       isOpen = false;
-      document.body.classList.remove('menu-locked');
-      document.body.style.top = '';
-      window.scrollTo(0, lockedScrollY);
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
       drawer.classList.remove('open');
       backdrop.classList.remove('open');
       toggleBtn.setAttribute('aria-expanded', 'false');
@@ -155,6 +152,11 @@
     });
 
     backdrop.addEventListener('click', closeMenu);
+
+    var navLinks = drawer.querySelectorAll('a');
+    for (var i = 0; i < navLinks.length; i++) {
+      navLinks[i].addEventListener('click', closeMenu);
+    }
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && isOpen) {

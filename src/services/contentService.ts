@@ -853,7 +853,7 @@ export async function seedInitialMenuToSupabase(): Promise<{ count: number; erro
     }
 
     // 2. Seed Restaurant Config
-    await client.from('restaurant_config').upsert(
+    const { error: cfgErr } = await client.from('restaurant_config').upsert(
       {
         id: 'main',
         name: DEFAULT_RESTAURANT_CONFIG.name,
@@ -868,9 +868,10 @@ export async function seedInitialMenuToSupabase(): Promise<{ count: number; erro
       },
       { onConflict: 'id' }
     );
+    if (cfgErr) throw cfgErr;
 
     // 3. Seed Site Content
-    await client.from('site_content').upsert(
+    const { error: siteErr } = await client.from('site_content').upsert(
       {
         id: 'main',
         hero_badge: DEFAULT_SITE_CONTENT.heroBadge,
@@ -882,6 +883,7 @@ export async function seedInitialMenuToSupabase(): Promise<{ count: number; erro
       },
       { onConflict: 'id' }
     );
+    if (siteErr) throw siteErr;
 
     // 4. Seed Gallery
     const galleryRows = DEFAULT_GALLERY_ITEMS.map((g, index) => ({
@@ -895,11 +897,12 @@ export async function seedInitialMenuToSupabase(): Promise<{ count: number; erro
       span_wide: Boolean(g.spanWide),
       display_order: index,
     }));
-    await client.from('gallery_items').upsert(galleryRows, { onConflict: 'id' });
+    const { error: galErr } = await client.from('gallery_items').upsert(galleryRows, { onConflict: 'id' });
+    if (galErr) throw galErr;
 
     return { count: rows.length };
   } catch (err: any) {
-    return { count: 0, error: err.message || 'Failed to seed database' };
+    return { count: 0, error: formatSupabaseError(err) };
   }
 }
 
