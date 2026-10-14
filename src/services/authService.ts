@@ -1,10 +1,11 @@
-import { getSupabaseClient, isSupabaseConfigured } from './supabase';
+import { getSupabaseClient, isSupabaseConfigured, formatSupabaseError } from './supabase';
 
 export interface AdminUser {
   email: string;
   id: string;
   role?: string;
   isSupabaseAuth: boolean;
+  isWhitelisted?: boolean;
 }
 
 export interface AdminMember {
@@ -46,14 +47,47 @@ export async function getCurrentAdminUser(): Promise<AdminUser | null> {
       } = await client.auth.getUser();
 
       if (user) {
-        // Query admin_users whitelist table if available
-        let role = 'admin';
+        // Attempt backend sync RPC if available
         try {
-          const { data: adminRecord } = await client
+          await client.rpc('sync_current_admin');
+        } catch {
+          // RPC may not be created yet in older schema
+        }
+
+        // Query admin_users whitelist table
+        let role = 'admin';
+        let isWhitelisted = false;
+        try {
+          // 1. Try by user_id
+          let { data: adminRecord } = await client
             .from('admin_users')
-            .select('role, is_active')
+            .select('id, user_id, email, role, is_active')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
+
+          // 2. If not found by user_id, check by email
+          if (!adminRecord && user.email) {
+            const { data: byEmail } = await client
+              .from('admin_users')
+              .select('id, user_id, email, role, is_active')
+              .ilike('email', user.email)
+              .maybeSingle();
+
+            if (byEmail) {
+              adminRecord = byEmail;
+              // Attempt to link user_id if null
+              if (!byEmail.user_id) {
+                try {
+                  await client
+                    .from('admin_users')
+                    .update({ user_id: user.id, updated_at: new Date().toISOString() })
+                    .eq('id', byEmail.id);
+                } catch {
+                  // Handled by SQL migration
+                }
+              }
+            }
+          }
 
           if (adminRecord) {
             if (!adminRecord.is_active) {
@@ -62,6 +96,7 @@ export async function getCurrentAdminUser(): Promise<AdminUser | null> {
               return null;
             }
             role = adminRecord.role || 'admin';
+            isWhitelisted = true;
           }
         } catch {
           // Table may not be queried yet or offline fallback
@@ -72,6 +107,7 @@ export async function getCurrentAdminUser(): Promise<AdminUser | null> {
           id: user.id,
           role,
           isSupabaseAuth: true,
+          isWhitelisted,
         };
       }
     } catch {
@@ -142,20 +178,55 @@ export async function adminSignIn(
     }
 
     if (data.user) {
-      // Verify authorization against admin_users whitelist table
+      // Trigger self-healing admin sync if available
       try {
-        const { data: adminRecord, error: adminErr } = await client
-          .from('admin_users')
-          .select('role, is_active')
-          .eq('user_id', data.user.id)
-          .single();
+        await client.rpc('sync_current_admin');
+      } catch {
+        // RPC may not be present in initial database
+      }
 
-        if (!adminErr && adminRecord && !adminRecord.is_active) {
-          await client.auth.signOut();
-          return {
-            success: false,
-            error: 'This administrator account has been deactivated. Contact the restaurant owner.',
-          };
+      // Verify authorization against admin_users whitelist table
+      let role = 'admin';
+      let isWhitelisted = false;
+      try {
+        let { data: adminRecord } = await client
+          .from('admin_users')
+          .select('id, user_id, email, role, is_active')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (!adminRecord && data.user.email) {
+          const { data: byEmail } = await client
+            .from('admin_users')
+            .select('id, user_id, email, role, is_active')
+            .ilike('email', data.user.email)
+            .maybeSingle();
+
+          if (byEmail) {
+            adminRecord = byEmail;
+            if (!byEmail.user_id) {
+              try {
+                await client
+                  .from('admin_users')
+                  .update({ user_id: data.user.id, updated_at: new Date().toISOString() })
+                  .eq('id', byEmail.id);
+              } catch {
+                // Ignore if policy blocks client-side update
+              }
+            }
+          }
+        }
+
+        if (adminRecord) {
+          if (!adminRecord.is_active) {
+            await client.auth.signOut();
+            return {
+              success: false,
+              error: 'This administrator account has been deactivated. Contact the restaurant owner.',
+            };
+          }
+          role = adminRecord.role || 'admin';
+          isWhitelisted = true;
         }
       } catch {
         // Table may be pending initial execution
@@ -166,8 +237,9 @@ export async function adminSignIn(
         user: {
           email: data.user.email || email,
           id: data.user.id,
-          role: 'admin',
+          role,
           isSupabaseAuth: true,
+          isWhitelisted,
         },
       };
     }
@@ -331,7 +403,7 @@ export async function createAdminMember(
         .single();
 
       if (insertErr) {
-        return { success: false, error: insertErr.message };
+        return { success: false, error: formatSupabaseError(insertErr) };
       }
 
       const member: AdminMember = {
@@ -375,9 +447,12 @@ export async function createAdminMember(
 /**
  * Toggles an administrator's active access status.
  */
-export async function toggleAdminStatus(memberId: string, isActive: boolean): Promise<boolean> {
+export async function toggleAdminStatus(
+  memberId: string,
+  isActive: boolean
+): Promise<{ success: boolean; error?: string }> {
   const current = await getCurrentAdminUser();
-  if (!current) return false;
+  if (!current) return { success: false, error: 'Unauthorized: Session missing' };
 
   const client = getSupabaseClient();
   if (client && current.isSupabaseAuth) {
@@ -387,9 +462,12 @@ export async function toggleAdminStatus(memberId: string, isActive: boolean): Pr
         .update({ is_active: isActive, updated_at: new Date().toISOString() })
         .eq('id', memberId);
 
-      if (!error) return true;
-    } catch {
-      // fallback
+      if (error) {
+        return { success: false, error: formatSupabaseError(error) };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to update administrator status' };
     }
   }
 
@@ -397,26 +475,31 @@ export async function toggleAdminStatus(memberId: string, isActive: boolean): Pr
     const list = await fetchAdminTeam();
     const updated = list.map((m) => (m.id === memberId ? { ...m, isActive } : m));
     localStorage.setItem(LOCAL_ADMIN_MEMBERS_KEY, JSON.stringify(updated));
-    return true;
-  } catch {
-    return false;
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }
 
 /**
  * Deletes or revokes an administrator record.
  */
-export async function deleteAdminMember(memberId: string): Promise<boolean> {
+export async function deleteAdminMember(
+  memberId: string
+): Promise<{ success: boolean; error?: string }> {
   const current = await getCurrentAdminUser();
-  if (!current) return false;
+  if (!current) return { success: false, error: 'Unauthorized: Session missing' };
 
   const client = getSupabaseClient();
   if (client && current.isSupabaseAuth) {
     try {
       const { error } = await client.from('admin_users').delete().eq('id', memberId);
-      if (!error) return true;
-    } catch {
-      // fallback
+      if (error) {
+        return { success: false, error: formatSupabaseError(error) };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to revoke administrator' };
     }
   }
 
@@ -424,8 +507,8 @@ export async function deleteAdminMember(memberId: string): Promise<boolean> {
     const list = await fetchAdminTeam();
     const filtered = list.filter((m) => m.id !== memberId);
     localStorage.setItem(LOCAL_ADMIN_MEMBERS_KEY, JSON.stringify(filtered));
-    return true;
-  } catch {
-    return false;
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }

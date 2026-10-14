@@ -7,6 +7,7 @@ import {
   Upload,
   Star,
   CheckCircle2,
+  AlertCircle,
   X,
 } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
@@ -20,7 +21,10 @@ export const MenuManager: React.FC = () => {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<{
+    type: 'info' | 'success' | 'error';
+    message: string;
+  } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Filter items
@@ -36,6 +40,7 @@ export const MenuManager: React.FC = () => {
 
   const handleStartNew = () => {
     setIsNew(true);
+    setSaveStatus(null);
     setEditingItem({
       id: 'dish_' + Date.now(),
       name: '',
@@ -76,17 +81,20 @@ export const MenuManager: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
-    setSaveStatus('Saving item...');
-    const ok = await updateMenuItem(editingItem);
-    if (ok) {
-      setSaveStatus('Saved successfully!');
+    setSaveStatus({ type: 'info', message: 'Saving item to database...' });
+    const res = await updateMenuItem(editingItem);
+    if (res.success) {
+      setSaveStatus({ type: 'success', message: 'Item saved successfully!' });
       setTimeout(() => {
         setEditingItem(null);
         setIsNew(false);
         setSaveStatus(null);
       }, 700);
     } else {
-      setSaveStatus('Error saving item. Please try again.');
+      setSaveStatus({
+        type: 'error',
+        message: res.error || 'Failed to save menu item. Please check database permissions.',
+      });
     }
   };
 
@@ -334,9 +342,26 @@ export const MenuManager: React.FC = () => {
             </div>
 
             {saveStatus && (
-              <div className="mb-4 p-3 rounded-lg bg-[#26221D] border border-[#C9A24B] text-xs text-[#C9A24B] flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{saveStatus}</span>
+              <div
+                className={`mb-4 p-3.5 rounded-lg border text-xs flex items-start gap-2.5 ${
+                  saveStatus.type === 'error'
+                    ? 'bg-red-950/70 border-red-700/70 text-red-200'
+                    : saveStatus.type === 'success'
+                    ? 'bg-emerald-950/70 border-emerald-700/70 text-emerald-200'
+                    : 'bg-[#26221D] border-[#C9A24B] text-[#C9A24B]'
+                }`}
+              >
+                {saveStatus.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 leading-relaxed">
+                  <span className="font-semibold block mb-0.5">
+                    {saveStatus.type === 'error' ? 'Database Save Error' : 'Status'}
+                  </span>
+                  <span>{saveStatus.message}</span>
+                </div>
               </div>
             )}
 

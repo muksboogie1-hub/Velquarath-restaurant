@@ -137,16 +137,48 @@ ALTER TABLE public.appearance_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
--- Security Definer function to check if the caller is an active verified administrator
+-- Security Definer function to check if the caller is an active verified administrator.
+-- Checks both direct user_id link and cryptographically verified JWT email in public.admin_users.
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
+    IF auth.uid() IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
     RETURN EXISTS (
         SELECT 1 FROM public.admin_users
-        WHERE user_id = auth.uid() AND is_active = TRUE
+        WHERE (
+            user_id = auth.uid()
+            OR (
+                (auth.jwt() ->> 'email') IS NOT NULL
+                AND LOWER(email) = LOWER(auth.jwt() ->> 'email')
+            )
+        )
+        AND is_active = TRUE
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- Dedicated RPC function for authenticated clients to sync their user_id upon login
+CREATE OR REPLACE FUNCTION public.sync_current_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    IF auth.uid() IS NULL OR (auth.jwt() ->> 'email') IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    UPDATE public.admin_users
+    SET user_id = auth.uid(), updated_at = NOW()
+    WHERE LOWER(email) = LOWER(auth.jwt() ->> 'email')
+      AND (user_id IS NULL OR user_id <> auth.uid())
+      AND is_active = TRUE;
+
+    RETURN FOUND;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.sync_current_admin() TO authenticated;
 
 -- Trigger function: automatically enrolls any registered auth user whose email exists in admin_users,
 -- or automatically registers the very first user as the primary 'owner'
@@ -171,7 +203,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS on_auth_user_created_admin_sync ON auth.users;
 CREATE TRIGGER on_auth_user_created_admin_sync
-    AFTER INSERT ON auth.users
+    AFTER INSERT OR UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_admin_auth_sync();
 
 -- 1. PUBLIC READ POLICIES (Anyone can see menu, config, content, gallery, appearance)
@@ -220,8 +252,17 @@ CREATE POLICY "Admin full access to reservations" ON public.reservations FOR ALL
 USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin full access to admin_users" ON public.admin_users;
-CREATE POLICY "Admin full access to admin_users" ON public.admin_users FOR ALL 
-USING (public.is_admin() OR user_id = auth.uid()) WITH CHECK (public.is_admin() OR user_id = auth.uid());
+DROP POLICY IF EXISTS "Admin view own or all admin_users" ON public.admin_users;
+DROP POLICY IF EXISTS "Admin modify admin_users" ON public.admin_users;
+
+-- Admin can view all records; users can view their own record to verify authorization
+CREATE POLICY "Admin view own or all admin_users" ON public.admin_users FOR SELECT 
+USING (public.is_admin() OR user_id = auth.uid() OR LOWER(email) = LOWER(auth.jwt() ->> 'email'));
+
+-- Only active verified administrators can add, edit, or delete administrators (prevents privilege escalation)
+CREATE POLICY "Admin modify admin_users" ON public.admin_users FOR ALL 
+USING (public.is_admin()) 
+WITH CHECK (public.is_admin());
 
 -- =====================================================================
 -- STORAGE BUCKET: restaurant-media (For food photos and hero banners)
@@ -278,7 +319,33 @@ VALUES (
 INSERT INTO public.site_content (id) VALUES ('main') ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.appearance_settings (id) VALUES ('main') ON CONFLICT (id) DO NOTHING;
 
--- Pre-seed owner email into admin_users so current admin account is immediately active upon schema execution
+-- Pre-seed owner emails into admin_users so current admin accounts are immediately active upon schema execution
 INSERT INTO public.admin_users (email, role, is_active)
 VALUES ('velquarath@gmail.com', 'owner', TRUE)
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET is_active = TRUE;
+
+INSERT INTO public.admin_users (email, role, is_active)
+VALUES ('codictobi@gmail.com', 'owner', TRUE)
+ON CONFLICT (email) DO UPDATE SET is_active = TRUE;
+
+-- Immediately synchronize any existing registered Supabase auth users to admin_users
+UPDATE public.admin_users a
+SET user_id = u.id, updated_at = NOW()
+FROM auth.users u
+WHERE LOWER(a.email) = LOWER(u.email)
+  AND (a.user_id IS NULL OR a.user_id <> u.id);
+
+-- If admin_users has no linked active users yet, safely link the first registered auth user as owner
+DO $$
+DECLARE
+    v_first_user RECORD;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id IS NOT NULL AND is_active = TRUE) THEN
+        SELECT id, email INTO v_first_user FROM auth.users ORDER BY created_at ASC LIMIT 1;
+        IF v_first_user.id IS NOT NULL THEN
+            INSERT INTO public.admin_users (user_id, email, role, is_active)
+            VALUES (v_first_user.id, v_first_user.email, 'owner', TRUE)
+            ON CONFLICT (email) DO UPDATE SET user_id = v_first_user.id, is_active = TRUE;
+        END IF;
+    END IF;
+END $$;

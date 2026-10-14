@@ -1,5 +1,7 @@
-import { getSupabaseClient, isSupabaseConfigured } from './supabase';
+import { getSupabaseClient, isSupabaseConfigured, formatSupabaseError } from './supabase';
 import { getCurrentAdminUser } from './authService';
+
+export { formatSupabaseError };
 import {
   MENU_ITEMS as DEFAULT_MENU_ITEMS,
   RESTAURANT_CONFIG as DEFAULT_RESTAURANT_CONFIG,
@@ -84,6 +86,8 @@ async function isSupabaseSession(): Promise<boolean> {
     return false;
   }
 }
+
+
 
 // ============================================================================
 // MENU MANAGEMENT
@@ -190,7 +194,7 @@ export async function saveMenuItem(item: MenuItem): Promise<{ success: boolean; 
             "Table 'menu_items' does not exist in your Supabase project yet. Please run 'supabase-schema.sql' in your Supabase SQL Editor. Your changes have been preserved locally in the meantime.",
         };
       }
-      return { success: false, error: error.message };
+      return { success: false, error: formatSupabaseError(error) };
     }
     return { success: true };
   } catch (err: any) {
@@ -198,16 +202,19 @@ export async function saveMenuItem(item: MenuItem): Promise<{ success: boolean; 
   }
 }
 
-export async function deleteMenuItem(id: string): Promise<boolean> {
+export async function deleteMenuItem(id: string): Promise<{ success: boolean; error?: string }> {
   const hasLiveSession = await isSupabaseSession();
   const client = getSupabaseClient();
 
   if (hasLiveSession && client) {
     try {
       const { error } = await client.from('menu_items').delete().eq('id', id);
-      if (!error) return true;
-    } catch {
-      // fallback
+      if (error) {
+        return { success: false, error: formatSupabaseError(error) };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Delete operation failed' };
     }
   }
 
@@ -215,9 +222,9 @@ export async function deleteMenuItem(id: string): Promise<boolean> {
     const current = await fetchMenuItems();
     const filtered = current.filter((i) => i.id !== id);
     localStorage.setItem(LOCAL_STORAGE_KEYS.MENU, JSON.stringify(filtered));
-    return true;
-  } catch {
-    return false;
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }
 
@@ -297,12 +304,12 @@ export async function saveRestaurantConfig(config: RestaurantConfig): Promise<{ 
 
     if (error) {
       localStorage.setItem(LOCAL_STORAGE_KEYS.CONFIG, JSON.stringify(config));
-      return { success: false, error: error.message };
+      return { success: false, error: formatSupabaseError(error) };
     }
     return { success: true };
   } catch (err: any) {
     localStorage.setItem(LOCAL_STORAGE_KEYS.CONFIG, JSON.stringify(config));
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Network request failed' };
   }
 }
 
@@ -375,12 +382,12 @@ export async function saveSiteContent(content: SiteContent): Promise<{ success: 
 
     if (error) {
       localStorage.setItem(LOCAL_STORAGE_KEYS.CONTENT, JSON.stringify(content));
-      return { success: false, error: error.message };
+      return { success: false, error: formatSupabaseError(error) };
     }
     return { success: true };
   } catch (err: any) {
     localStorage.setItem(LOCAL_STORAGE_KEYS.CONTENT, JSON.stringify(content));
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Network request failed' };
   }
 }
 
@@ -463,23 +470,25 @@ export async function saveGalleryItem(item: GalleryItem): Promise<{ success: boo
     );
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: formatSupabaseError(error) };
     }
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Gallery item save failed' };
   }
 }
 
-export async function deleteGalleryItem(id: string): Promise<boolean> {
+export async function deleteGalleryItem(id: string): Promise<{ success: boolean; error?: string }> {
   const hasLiveSession = await isSupabaseSession();
   const client = getSupabaseClient();
 
   if (hasLiveSession && client) {
     try {
-      await client.from('gallery_items').delete().eq('id', id);
-    } catch {
-      // fallback
+      const { error } = await client.from('gallery_items').delete().eq('id', id);
+      if (error) return { success: false, error: formatSupabaseError(error) };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Delete operation failed' };
     }
   }
 
@@ -487,9 +496,9 @@ export async function deleteGalleryItem(id: string): Promise<boolean> {
     const current = await fetchGalleryItems();
     const filtered = current.filter((i) => i.id !== id);
     localStorage.setItem(LOCAL_STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
-    return true;
-  } catch {
-    return false;
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }
 
@@ -564,12 +573,12 @@ export async function saveAppearanceSettings(settings: AppearanceSettings): Prom
 
     if (error) {
       localStorage.setItem(LOCAL_STORAGE_KEYS.APPEARANCE, JSON.stringify(settings));
-      return { success: false, error: error.message };
+      return { success: false, error: formatSupabaseError(error) };
     }
     return { success: true };
   } catch (err: any) {
     localStorage.setItem(LOCAL_STORAGE_KEYS.APPEARANCE, JSON.stringify(settings));
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || 'Appearance save failed' };
   }
 }
 
@@ -670,7 +679,7 @@ export async function updateReservationStatus(
   id: string,
   status: 'pending' | 'confirmed' | 'declined' | 'completed',
   adminNotes?: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   const hasLiveSession = await isSupabaseSession();
   const client = getSupabaseClient();
 
@@ -684,9 +693,12 @@ export async function updateReservationStatus(
         updatePayload.admin_notes = adminNotes;
       }
       const { error } = await client.from('reservations').update(updatePayload).eq('id', id);
-      if (!error) return true;
-    } catch {
-      // fallback
+      if (error) {
+        return { success: false, error: formatSupabaseError(error) };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to update reservation status' };
     }
   }
 
@@ -697,13 +709,13 @@ export async function updateReservationStatus(
       list[index].status = status;
       if (adminNotes !== undefined) list[index].admin_notes = adminNotes;
       localStorage.setItem(LOCAL_STORAGE_KEYS.RESERVATIONS, JSON.stringify(list));
-      return true;
+      return { success: true };
     }
-  } catch {
-    // ignore
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 
-  return false;
+  return { success: false, error: 'Reservation record not found' };
 }
 
 // ============================================================================
@@ -775,7 +787,7 @@ export async function uploadImage(file: File): Promise<{ url: string; error?: st
 
       return {
         url: previewUrl,
-        error: error.message || 'Upload failed. Photo preview preserved locally.',
+        error: formatSupabaseError(error),
       };
     }
 
@@ -898,6 +910,7 @@ export async function seedInitialMenuToSupabase(): Promise<{ count: number; erro
 export interface SupabaseHealthReport {
   configured: boolean;
   userAuthenticated: boolean;
+  adminAuthorized: boolean;
   menuTable: boolean;
   configTable: boolean;
   adminTable: boolean;
@@ -911,6 +924,7 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealthReport> {
   const report: SupabaseHealthReport = {
     configured: isSupabaseConfigured(),
     userAuthenticated: Boolean(user?.isSupabaseAuth),
+    adminAuthorized: false,
     menuTable: false,
     configTable: false,
     adminTable: false,
@@ -930,6 +944,20 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealthReport> {
 
     const { error: aErr } = await client.from('admin_users').select('id').limit(1);
     report.adminTable = !aErr;
+
+    if (user?.id) {
+      try {
+        const { data: adminRecord } = await client
+          .from('admin_users')
+          .select('id, user_id, is_active')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        report.adminAuthorized = Boolean(adminRecord && adminRecord.is_active);
+      } catch {
+        // ignore
+      }
+    }
 
     const { data: buckets } = await client.storage.listBuckets();
     report.storageBucket = Boolean(

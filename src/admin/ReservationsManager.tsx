@@ -8,6 +8,7 @@ import {
   CheckCircle,
   XCircle,
   CheckCircle2,
+  AlertCircle,
   MessageSquare,
   Search,
   FileEdit,
@@ -21,6 +22,10 @@ export const ReservationsManager: React.FC = () => {
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [testBookingLoading, setTestBookingLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const filtered = reservations.filter((r) => {
     const matchesStatus = filterStatus === 'all' || r.status === filterStatus;
@@ -36,12 +41,31 @@ export const ReservationsManager: React.FC = () => {
     id: string,
     status: 'pending' | 'confirmed' | 'declined' | 'completed'
   ) => {
-    await changeReservationStatus(id, status);
+    setStatusMsg(null);
+    const res = await changeReservationStatus(id, status);
+    if (!res.success) {
+      setStatusMsg({
+        type: 'error',
+        message: res.error || 'Failed to update reservation status in database.',
+      });
+    }
   };
 
   const handleSaveNotes = async (id: string) => {
-    await changeReservationStatus(id, reservations.find((r) => r.id === id)?.status || 'pending', noteText);
-    setEditingNotesId(null);
+    setStatusMsg(null);
+    const res = await changeReservationStatus(
+      id,
+      reservations.find((r) => r.id === id)?.status || 'pending',
+      noteText
+    );
+    if (!res.success) {
+      setStatusMsg({
+        type: 'error',
+        message: res.error || 'Failed to save staff notes in database.',
+      });
+    } else {
+      setEditingNotesId(null);
+    }
   };
 
   const handleCreateTestBooking = async () => {
@@ -79,6 +103,28 @@ export const ReservationsManager: React.FC = () => {
           </button>
         )}
       </div>
+
+      {statusMsg && (
+        <div
+          className={`p-4 rounded-xl border text-xs flex items-start gap-2.5 ${
+            statusMsg.type === 'error'
+              ? 'bg-red-950/70 border-red-700/70 text-red-200'
+              : 'bg-emerald-950/60 border-emerald-700/60 text-emerald-200'
+          }`}
+        >
+          {statusMsg.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 leading-relaxed">
+            <span className="font-semibold block mb-0.5">
+              {statusMsg.type === 'error' ? 'Database Error' : 'Success'}
+            </span>
+            <span>{statusMsg.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Filters and search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">

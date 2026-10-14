@@ -80,17 +80,22 @@ export const StaffManager: React.FC = () => {
   const handleToggle = async (member: AdminMember) => {
     if (member.role === 'owner') return; // Cannot deactivate primary owner
     const nextStatus = !member.isActive;
-    const ok = await toggleAdminStatus(member.id, nextStatus);
-    if (ok) {
+    const res = await toggleAdminStatus(member.id, nextStatus);
+    if (res.success) {
       setMembers((prev) =>
         prev.map((m) => (m.id === member.id ? { ...m, isActive: nextStatus } : m))
       );
+    } else {
+      setStatusMsg({
+        type: 'error',
+        text: res.error || 'Could not update administrator status.',
+      });
     }
   };
 
   const handleDelete = async (id: string) => {
-    const ok = await deleteAdminMember(id);
-    if (ok) {
+    const res = await deleteAdminMember(id);
+    if (res.success) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
       setDeleteConfirmId(null);
       setStatusMsg({
@@ -100,7 +105,7 @@ export const StaffManager: React.FC = () => {
     } else {
       setStatusMsg({
         type: 'error',
-        text: 'Could not revoke administrator access.',
+        text: res.error || 'Could not revoke administrator access.',
       });
     }
   };

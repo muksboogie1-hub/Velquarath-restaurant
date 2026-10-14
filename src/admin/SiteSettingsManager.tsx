@@ -181,90 +181,107 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogg
         </div>
 
         {healthReport ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-            {/* Table Health */}
-            <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#F4ECDA]">Public Tables</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    healthReport.menuTable && healthReport.configTable
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
-                      : 'bg-red-950/80 text-red-300 border border-red-700/50'
-                  }`}
-                >
-                  {healthReport.menuTable && healthReport.configTable ? '✓ Ready' : '✗ Missing'}
-                </span>
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Table Health */}
+              <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#F4ECDA]">Public Tables</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      healthReport.menuTable && healthReport.configTable
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
+                        : 'bg-red-950/80 text-red-300 border border-red-700/50'
+                    }`}
+                  >
+                    {healthReport.menuTable && healthReport.configTable ? '✓ Ready' : '✗ Missing'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#B8AD96]">
+                  {healthReport.menuTable && healthReport.configTable
+                    ? 'All public content tables exist and are accessible.'
+                    : "Tables not created yet. Please execute 'supabase-schema.sql' in your SQL Editor."}
+                </p>
               </div>
-              <p className="text-[11px] text-[#B8AD96]">
-                {healthReport.menuTable && healthReport.configTable
-                  ? 'All public content tables exist and are accessible.'
-                  : "Tables not created yet. Please execute 'supabase-schema.sql' in your SQL Editor."}
-              </p>
+
+              {/* Admin RLS Whitelist Table */}
+              <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#F4ECDA]">RLS Whitelist</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      healthReport.adminTable
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
+                        : 'bg-red-950/80 text-red-300 border border-red-700/50'
+                    }`}
+                  >
+                    {healthReport.adminTable ? '✓ Protected' : '✗ Missing'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#B8AD96]">
+                  {healthReport.adminTable
+                    ? 'admin_users table active with is_admin() RLS authorization.'
+                    : 'admin_users table not found. Execute the updated supabase-schema.sql.'}
+                </p>
+              </div>
+
+              {/* Storage Bucket Health */}
+              <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#F4ECDA]">Storage Bucket</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      healthReport.storageBucket
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
+                        : 'bg-red-950/80 text-red-300 border border-red-700/50'
+                    }`}
+                  >
+                    {healthReport.storageBucket ? '✓ Ready' : '✗ Missing'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#B8AD96]">
+                  {healthReport.storageBucket
+                    ? "Bucket 'restaurant-media' is active for photo uploads."
+                    : "Bucket 'restaurant-media' not found. Create under Storage -> New Bucket."}
+                </p>
+              </div>
+
+              {/* Auth Session */}
+              <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#F4ECDA]">Auth Mode</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      currentUser?.isSupabaseAuth
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
+                        : 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
+                    }`}
+                  >
+                    {currentUser?.isSupabaseAuth ? '✓ Supabase User' : '⚡ Preview Sandbox'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#B8AD96]">
+                  {currentUser?.isSupabaseAuth
+                    ? `Signed in as ${currentUser.email} with live JWT tokens.`
+                    : 'Operating in local preview sandbox. Live edits require Supabase login.'}
+                </p>
+              </div>
             </div>
 
-            {/* Admin RLS Whitelist Table */}
-            <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#F4ECDA]">RLS Whitelist</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    healthReport.adminTable
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
-                      : 'bg-red-950/80 text-red-300 border border-red-700/50'
-                  }`}
-                >
-                  {healthReport.adminTable ? '✓ Protected' : '✗ Missing'}
-                </span>
+            {healthReport.userAuthenticated && !healthReport.adminAuthorized && (
+              <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-600/70 text-amber-200 text-xs flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold block text-amber-100">Action Required: Admin Permissions Not Linked</span>
+                  <p className="leading-relaxed">
+                    Your authenticated account ({currentUser?.email}) is signed in, but its unique User ID is not linked to an active row in the <code className="px-1.5 py-0.5 bg-black/40 rounded text-amber-300 font-mono">public.admin_users</code> whitelist table. This causes PostgreSQL Row Level Security (RLS) to reject save operations with error code 42501.
+                  </p>
+                  <p className="leading-relaxed font-semibold text-amber-300">
+                    Fix: Open your Supabase Dashboard &rarr; SQL Editor, and execute the updated SQL script in <code className="px-1.5 py-0.5 bg-black/40 rounded font-mono">supabase-schema.sql</code> to synchronize your admin record.
+                  </p>
+                </div>
               </div>
-              <p className="text-[11px] text-[#B8AD96]">
-                {healthReport.adminTable
-                  ? 'admin_users table active with is_admin() RLS authorization.'
-                  : 'admin_users table not found. Execute the updated supabase-schema.sql.'}
-              </p>
-            </div>
-
-            {/* Storage Bucket Health */}
-            <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#F4ECDA]">Storage Bucket</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    healthReport.storageBucket
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
-                      : 'bg-red-950/80 text-red-300 border border-red-700/50'
-                  }`}
-                >
-                  {healthReport.storageBucket ? '✓ Ready' : '✗ Missing'}
-                </span>
-              </div>
-              <p className="text-[11px] text-[#B8AD96]">
-                {healthReport.storageBucket
-                  ? "Bucket 'restaurant-media' is active for photo uploads."
-                  : "Bucket 'restaurant-media' not found. Create under Storage -> New Bucket."}
-              </p>
-            </div>
-
-            {/* Auth Session */}
-            <div className="p-3.5 rounded-xl bg-[#141210] border border-[#332E26] space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#F4ECDA]">Auth Mode</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    currentUser?.isSupabaseAuth
-                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
-                      : 'bg-amber-950/80 text-amber-300 border border-amber-700/50'
-                  }`}
-                >
-                  {currentUser?.isSupabaseAuth ? '✓ Supabase User' : '⚡ Preview Sandbox'}
-                </span>
-              </div>
-              <p className="text-[11px] text-[#B8AD96]">
-                {currentUser?.isSupabaseAuth
-                  ? `Signed in as ${currentUser.email} with live JWT tokens.`
-                  : 'Operating in local preview sandbox. Live edits require Supabase login.'}
-              </p>
-            </div>
+            )}
           </div>
         ) : (
           <div className="p-4 rounded-lg bg-[#141210] border border-dashed border-[#332E26] text-center text-xs text-[#736B5E]">

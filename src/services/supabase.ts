@@ -273,3 +273,42 @@ export const resetSupabaseClient = () => {
 };
 
 export const supabase: SupabaseClient | null = getSupabaseClient();
+
+/**
+ * Formats Supabase PostgrestError or generic error objects into actionable diagnostic messages
+ * preserving the exact error code, message, details, and hint without leaking secrets, tokens, or passwords.
+ */
+export function formatSupabaseError(error: any): string {
+  if (!error) return 'Unknown error occurred.';
+  if (typeof error === 'string') return error;
+
+  const code = error.code ? `[${error.code}] ` : '';
+  const rawMessage = error.message || error.error_description || 'Database request failed';
+  // Strip out any sensitive tokens or secrets if accidentally present in error text
+  const cleanMessage = String(rawMessage)
+    .replace(/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g, '[REDACTED_JWT]')
+    .replace(/sb_secret_[a-zA-Z0-9_-]+/g, '[REDACTED_KEY]');
+
+  const details =
+    error.details && error.details !== error.message
+      ? ` — Details: ${String(error.details).replace(/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g, '[REDACTED_JWT]')}`
+      : '';
+  const hint = error.hint ? ` (Hint: ${error.hint})` : '';
+
+  // Specific guidance for known Supabase errors:
+  if (
+    error.code === '42501' ||
+    cleanMessage.toLowerCase().includes('row-level security') ||
+    cleanMessage.toLowerCase().includes('permission denied')
+  ) {
+    return `${code}${cleanMessage}. Cause: Your authenticated user is not linked or recognized as an active administrator in public.admin_users. Please execute the updated SQL migration in supabase-schema.sql in your Supabase SQL Editor to authorize your account.`;
+  }
+  if (error.code === 'PGRST205' || cleanMessage.includes('Could not find the table')) {
+    return `${code}${cleanMessage}. Cause: Required database table does not exist. Please run supabase-schema.sql in your Supabase SQL Editor.`;
+  }
+  if (error.code === '23505') {
+    return `${code}${cleanMessage}${details} (A record with this identifier already exists).`;
+  }
+
+  return `${code}${cleanMessage}${details}${hint}`;
+}

@@ -29,6 +29,11 @@ import {
 import { AdminUser, getCurrentAdminUser } from '../services/authService';
 import { isSupabaseConfigured } from '../services/supabase';
 
+export interface OperationResult {
+  success: boolean;
+  error?: string;
+}
+
 interface ContentContextType {
   menuItems: MenuItem[];
   restaurantConfig: RestaurantConfig;
@@ -40,13 +45,13 @@ interface ContentContextType {
   loading: boolean;
   isSupabaseActive: boolean;
   refreshAll: () => Promise<void>;
-  updateMenuItem: (item: MenuItem) => Promise<boolean>;
-  removeMenuItem: (id: string) => Promise<boolean>;
-  updateConfig: (cfg: RestaurantConfig) => Promise<boolean>;
-  updateContent: (content: SiteContent) => Promise<boolean>;
-  updateAppearance: (app: AppearanceSettings) => Promise<boolean>;
-  addGalleryItem: (item: GalleryItem) => Promise<boolean>;
-  removeGalleryItem: (id: string) => Promise<boolean>;
+  updateMenuItem: (item: MenuItem) => Promise<OperationResult>;
+  removeMenuItem: (id: string) => Promise<OperationResult>;
+  updateConfig: (cfg: RestaurantConfig) => Promise<OperationResult>;
+  updateContent: (content: SiteContent) => Promise<OperationResult>;
+  updateAppearance: (app: AppearanceSettings) => Promise<OperationResult>;
+  addGalleryItem: (item: GalleryItem) => Promise<OperationResult>;
+  removeGalleryItem: (id: string) => Promise<OperationResult>;
   bookReservation: (data: {
     guestName: string;
     email?: string;
@@ -61,7 +66,7 @@ interface ContentContextType {
     id: string,
     status: 'pending' | 'confirmed' | 'declined' | 'completed',
     notes?: string
-  ) => Promise<boolean>;
+  ) => Promise<OperationResult>;
   setCurrentUser: (user: AdminUser | null) => void;
 }
 
@@ -108,7 +113,7 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     refreshAll();
   }, []);
 
-  const handleUpdateMenuItem = async (item: MenuItem): Promise<boolean> => {
+  const handleUpdateMenuItem = async (item: MenuItem): Promise<OperationResult> => {
     const res = await saveMenuItem(item);
     if (res.success) {
       setMenuItems((prev) => {
@@ -120,38 +125,37 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
         return [item, ...prev];
       });
-      return true;
     }
-    return false;
+    return res;
   };
 
-  const handleRemoveMenuItem = async (id: string): Promise<boolean> => {
-    const ok = await deleteMenuItem(id);
-    if (ok) {
+  const handleRemoveMenuItem = async (id: string): Promise<OperationResult> => {
+    const res = await deleteMenuItem(id);
+    if (res.success) {
       setMenuItems((prev) => prev.filter((i) => i.id !== id));
     }
-    return ok;
+    return res;
   };
 
-  const handleUpdateConfig = async (cfg: RestaurantConfig): Promise<boolean> => {
+  const handleUpdateConfig = async (cfg: RestaurantConfig): Promise<OperationResult> => {
     const res = await saveRestaurantConfig(cfg);
     if (res.success) setRestaurantConfig(cfg);
-    return res.success;
+    return res;
   };
 
-  const handleUpdateContent = async (content: SiteContent): Promise<boolean> => {
+  const handleUpdateContent = async (content: SiteContent): Promise<OperationResult> => {
     const res = await saveSiteContent(content);
     if (res.success) setSiteContent(content);
-    return res.success;
+    return res;
   };
 
-  const handleUpdateAppearance = async (app: AppearanceSettings): Promise<boolean> => {
+  const handleUpdateAppearance = async (app: AppearanceSettings): Promise<OperationResult> => {
     const res = await saveAppearanceSettings(app);
     if (res.success) setAppearance(app);
-    return res.success;
+    return res;
   };
 
-  const handleAddGalleryItem = async (item: GalleryItem): Promise<boolean> => {
+  const handleAddGalleryItem = async (item: GalleryItem): Promise<OperationResult> => {
     const res = await saveGalleryItem(item);
     if (res.success) {
       setGalleryItems((prev) => {
@@ -163,17 +167,16 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
         return [item, ...prev];
       });
-      return true;
     }
-    return false;
+    return res;
   };
 
-  const handleRemoveGalleryItem = async (id: string): Promise<boolean> => {
-    const ok = await deleteGalleryItem(id);
-    if (ok) {
+  const handleRemoveGalleryItem = async (id: string): Promise<OperationResult> => {
+    const res = await deleteGalleryItem(id);
+    if (res.success) {
       setGalleryItems((prev) => prev.filter((i) => i.id !== id));
     }
-    return ok;
+    return res;
   };
 
   const handleBookReservation = async (data: {
@@ -198,16 +201,16 @@ export const ContentProvider: React.FC<{ children: ReactNode }> = ({ children })
     id: string,
     status: 'pending' | 'confirmed' | 'declined' | 'completed',
     notes?: string
-  ): Promise<boolean> => {
-    const ok = await updateReservationStatus(id, status, notes);
-    if (ok) {
+  ): Promise<OperationResult> => {
+    const res = await updateReservationStatus(id, status, notes);
+    if (res.success) {
       setReservations((prev) =>
         prev.map((r) =>
           r.id === id ? { ...r, status, admin_notes: notes !== undefined ? notes : r.admin_notes } : r
         )
       );
     }
-    return ok;
+    return res;
   };
 
   return (

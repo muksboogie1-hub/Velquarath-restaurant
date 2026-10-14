@@ -5,6 +5,7 @@ import {
   Trash2,
   Image as ImageIcon,
   CheckCircle2,
+  AlertCircle,
   Save,
   X,
 } from 'lucide-react';
@@ -25,7 +26,10 @@ export const BrandingManager: React.FC = () => {
   const [heroUrl, setHeroUrl] = useState(appearance.customHeroUrl || '');
   const [logoUrl, setLogoUrl] = useState(appearance.customLogoUrl || '');
   const [savingHero, setSavingHero] = useState(false);
-  const [heroSavedMsg, setHeroSavedMsg] = useState<string | null>(null);
+  const [heroSavedMsg, setHeroSavedMsg] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // Gallery item form
   const [showAddModal, setShowAddModal] = useState(false);
@@ -45,15 +49,21 @@ export const BrandingManager: React.FC = () => {
   const handleSaveHeroBranding = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingHero(true);
-    const ok = await updateAppearance({
+    setHeroSavedMsg(null);
+    const res = await updateAppearance({
       ...appearance,
       customHeroUrl: heroUrl.trim() || undefined,
       customLogoUrl: logoUrl.trim() || undefined,
     });
     setSavingHero(false);
-    if (ok) {
-      setHeroSavedMsg('Hero & branding images saved!');
+    if (res.success) {
+      setHeroSavedMsg({ type: 'success', message: 'Hero & branding images saved successfully!' });
       setTimeout(() => setHeroSavedMsg(null), 3000);
+    } else {
+      setHeroSavedMsg({
+        type: 'error',
+        message: res.error || 'Failed to save branding images. Please check database permissions.',
+      });
     }
   };
 
@@ -121,9 +131,24 @@ export const BrandingManager: React.FC = () => {
       </div>
 
       {heroSavedMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>{heroSavedMsg}</span>
+        <div
+          className={`p-4 rounded-xl border text-xs flex items-start gap-2.5 ${
+            heroSavedMsg.type === 'error'
+              ? 'bg-red-950/70 border-red-700/70 text-red-200'
+              : 'bg-emerald-950/60 border-emerald-700/60 text-emerald-200'
+          }`}
+        >
+          {heroSavedMsg.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 leading-relaxed">
+            <span className="font-semibold block mb-0.5">
+              {heroSavedMsg.type === 'error' ? 'Database Save Error' : 'Success'}
+            </span>
+            <span>{heroSavedMsg.message}</span>
+          </div>
         </div>
       )}
 

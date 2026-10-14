@@ -6,6 +6,7 @@ import {
   MapPin,
   Save,
   CheckCircle2,
+  AlertCircle,
   Plus,
   Trash2,
   MessageSquare,
@@ -23,7 +24,7 @@ export const HoursAndContactManager: React.FC = () => {
       { days: 'Sunday', time: '08:30 – 21:00 (Sunday Brunch, Traditional Plates & Jazz)' },
     ],
   });
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleHourChange = (index: number, field: 'days' | 'time', value: string) => {
@@ -50,13 +51,16 @@ export const HoursAndContactManager: React.FC = () => {
     e.preventDefault();
     setSaving(true);
     setStatus(null);
-    const ok = await updateConfig(formData);
+    const res = await updateConfig(formData);
     setSaving(false);
-    if (ok) {
-      setStatus('Opening hours and contact details updated successfully!');
+    if (res.success) {
+      setStatus({ type: 'success', message: 'Opening hours and contact details updated successfully!' });
       setTimeout(() => setStatus(null), 3000);
     } else {
-      setStatus('Error saving settings. Please try again.');
+      setStatus({
+        type: 'error',
+        message: res.error || 'Failed to save settings. Please check database permissions.',
+      });
     }
   };
 
@@ -70,9 +74,24 @@ export const HoursAndContactManager: React.FC = () => {
       </div>
 
       {status && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>{status}</span>
+        <div
+          className={`p-4 rounded-xl border text-xs flex items-start gap-2.5 ${
+            status.type === 'error'
+              ? 'bg-red-950/70 border-red-700/70 text-red-200'
+              : 'bg-emerald-950/60 border-emerald-700/60 text-emerald-200'
+          }`}
+        >
+          {status.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 leading-relaxed">
+            <span className="font-semibold block mb-0.5">
+              {status.type === 'error' ? 'Database Save Error' : 'Success'}
+            </span>
+            <span>{status.message}</span>
+          </div>
         </div>
       )}
 

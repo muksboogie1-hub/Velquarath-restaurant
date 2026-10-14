@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Bell, CheckCircle2, Save, ArrowRight } from 'lucide-react';
+import { Palette, Bell, CheckCircle2, AlertCircle, Save, ArrowRight } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { AppearanceSettings } from '../services/contentService';
 
@@ -14,17 +14,23 @@ const COLOR_PRESETS = [
 export const AppearanceManager: React.FC = () => {
   const { appearance, updateAppearance } = useContent();
   const [formData, setFormData] = useState<AppearanceSettings>({ ...appearance });
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const ok = await updateAppearance(formData);
+    setStatus(null);
+    const res = await updateAppearance(formData);
     setSaving(false);
-    if (ok) {
-      setStatus('Appearance settings saved successfully!');
+    if (res.success) {
+      setStatus({ type: 'success', message: 'Appearance settings saved successfully!' });
       setTimeout(() => setStatus(null), 3000);
+    } else {
+      setStatus({
+        type: 'error',
+        message: res.error || 'Failed to save appearance settings. Please check database permissions.',
+      });
     }
   };
 
@@ -38,9 +44,24 @@ export const AppearanceManager: React.FC = () => {
       </div>
 
       {status && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>{status}</span>
+        <div
+          className={`p-4 rounded-xl border text-xs flex items-start gap-2.5 ${
+            status.type === 'error'
+              ? 'bg-red-950/70 border-red-700/70 text-red-200'
+              : 'bg-emerald-950/60 border-emerald-700/60 text-emerald-200'
+          }`}
+        >
+          {status.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 leading-relaxed">
+            <span className="font-semibold block mb-0.5">
+              {status.type === 'error' ? 'Database Save Error' : 'Success'}
+            </span>
+            <span>{status.message}</span>
+          </div>
         </div>
       )}
 
