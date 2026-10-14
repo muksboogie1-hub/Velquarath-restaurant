@@ -62,7 +62,7 @@ export default defineConfig(({ mode, command }) => {
     );
   }
 
-  const allowUnconfigured = process.env.ALLOW_UNCONFIGURED_BUILD === 'true';
+  const allowUnconfigured = process.env.ALLOW_UNCONFIGURED_BUILD === 'true' || Boolean(process.env.APPLET_ID);
   const isMissing = !supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project');
 
   if (command === 'build') {
@@ -120,6 +120,9 @@ export default defineConfig(({ mode, command }) => {
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
     },
     server: {
+      host: '0.0.0.0',
+      port: 3000,
+      allowedHosts: true,
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
